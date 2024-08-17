@@ -1,0 +1,107 @@
+Array
+(
+    [0] => Array
+        (
+            [id] => 1
+            [libelle] => Nature
+            [animations] => Array
+                (
+                    [0] => Array
+                        (
+                            [id] => 1
+                            [theme_id] => 1
+                            [libelle] => Oiseaux Chantants
+                            [video_url] => /videos/birds_singing.mp4
+                        )
+
+                    [1] => Array
+                        (
+                            [id] => 2
+                            [theme_id] => 1
+                            [libelle] => Rivière Coulante
+                            [video_url] => /videos/river_flowing.mp4
+                        )
+
+                )
+
+        )
+
+    [1] => Array
+        (
+            [id] => 2
+            [libelle] => Technologie
+            [animations] => Array
+                (
+                    [0] => Array
+                        (
+                            [id] => 3
+                            [theme_id] => 2
+                            [libelle] => Démarrage voiture
+                            [video_url] => /videos/startup_car.mp4
+                        )
+
+                    [1] => Array
+                        (
+                            [id] => 4
+                            [theme_id] => 2
+                            [libelle] => Voix Robotique
+                            [video_url] => /videos/robotic_voice.mp4
+                        )
+
+                )
+
+        )
+
+    [2] => Array
+        (
+            [id] => 3
+            [libelle] => Sport
+            [animations] => Array
+                (
+                    [0] => Array
+                        (
+                            [id] => 5
+                            [theme_id] => 3
+                            [libelle] => Acclamations de la Foule
+                            [video_url] => /videos/crowd_cheering.mp4
+                        )
+
+                    [1] => Array
+                        (
+                            [id] => 6
+                            [theme_id] => 3
+                            [libelle] => Sifflement
+                            [video_url] => /videos/whistle_blowing.mp4
+                        )
+
+                )
+
+        )
+
+    [3] => Array
+        (
+            [id] => 4
+            [libelle] => Musique
+            [animations] => Array
+                (
+                    [0] => Array
+                        (
+                            [id] => 7
+                            [theme_id] => 4
+                            [libelle] => Solo de Guitare
+                            [video_url] => /videos/guitar_solo.mp4
+                        )
+
+                    [1] => Array
+                        (
+                            [id] => 8
+                            [theme_id] => 4
+                            [libelle] => Mélodie de Piano
+                            [video_url] => /videos/piano_melody.mp4
+                        )
+
+                )
+
+        )
+
+)
