@@ -17,6 +17,11 @@ $app->group('/api', function (RouteCollectorProxy $group) {
     $group->get('/themes', \App\Controllers\ThemeController::class . ':getThemes')->add(new \App\Middleware\AuthMiddleware());
 });
 
+$app->group('/videos', function (RouteCollectorProxy $group) {
+    $group->get('/{video_name}', \App\Controllers\VideosController::class . ':getVideo');
+    //->add(new \App\Middleware\AuthMiddleware());
+});
+
 $app->get('/test', function (Request $request, Response $response, $args) {
     $response->getBody()->write("Slim Framework is working great");
     return $response;
