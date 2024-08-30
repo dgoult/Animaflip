@@ -1,10 +1,10 @@
 package Model
-
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class Theme(
+data class Animation(
     val id: Int,
+    val theme_id: Int,
     val libelle: String,
-    val animations: List<Animation>
+    val video_url: String
 )

@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.compose.compiler)
+    kotlin("plugin.serialization") version "1.7.0"
 }
 
 kotlin {
@@ -40,12 +41,15 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            implementation("network.chaintech:compose-multiplatform-media-player:1.0.11")
-            implementation("com.google.android.exoplayer:exoplayer:2.16.1")
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2")
-            implementation("androidx.media3:media3-exoplayer:1.1.0")
-            implementation("androidx.media3:media3-exoplayer-dash:1.1.0")
-            implementation("androidx.media3:media3-ui:1.1.0")
+//            implementation("network.chaintech:compose-multiplatform-media-player:1.0.11")
+            implementation("network.chaintech:compose-multiplatform-media-player:1.0.19")
+//            implementation("androidx.media3:media3-exoplayer:1.0.0")
+//            implementation("androidx.media3:media3-ui:1.0.0")
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+            implementation("io.ktor:ktor-client-core:2.0.0")
+            implementation("io.ktor:ktor-client-logging:2.0.0")
+            implementation("io.ktor:ktor-client-content-negotiation:2.0.0")
+            implementation("io.ktor:ktor-serialization-kotlinx-json:2.0.0")
             //noinspection UseTomlInstead
 //            implementation("androidx.navigation:navigation-compose:2.4.0-alpha10")
 //            implementation(libs.androidx.lifecycle.viewmodel.compose.v240alpha02)
@@ -78,7 +82,7 @@ android {
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     sourceSets["main"].res.srcDirs("src/androidMain/res")
-    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
+    //sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
         applicationId = "org.animaflip.app"
@@ -115,5 +119,6 @@ dependencies {
 repositories {
     google()
     mavenCentral()
+    maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
 }
 

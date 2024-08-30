@@ -1,30 +1,22 @@
-import Model.Theme
+import Model.ConnectedUser
 import Model.User
 import Service.ApiService
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -33,34 +25,26 @@ import androidx.compose.ui.unit.sp
 import animaflipapp.composeapp.generated.resources.Res
 import animaflipapp.composeapp.generated.resources.backward
 import chaintech.videoplayer.model.PlayerConfig
-import chaintech.videoplayer.ui.reel.ReelsPlayerView
 import chaintech.videoplayer.ui.video.VideoPlayerView
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalViewConfiguration
-import androidx.compose.ui.viewinterop.AndroidView
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.ui.PlayerView
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 @Preview
 fun App() {
     MaterialTheme {
-        var user: User? by remember { mutableStateOf(null) }
+        var connectedUser: ConnectedUser? by remember { mutableStateOf<ConnectedUser?>(null) }
         var userEmail: String by remember { mutableStateOf("") }
         var userPassword: String by remember { mutableStateOf("") }
         var auth = remember { Auth(apiService = ApiService()) }
+
+        val coroutineScope = rememberCoroutineScope()
 //        var themes = remember { ApiService().getSampleThemes() }
 
-        if (user === null)
+        if (connectedUser === null)
         {
             Column(
                 modifier = Modifier.fillMaxSize(),
@@ -80,7 +64,11 @@ fun App() {
                     visualTransformation = PasswordVisualTransformation()
                 )
                 Spacer(modifier = Modifier.height(20.dp))
-                Button(onClick = { user = auth.login(userEmail, userPassword) }) {
+                Button(onClick = {
+                    coroutineScope.launch {
+                        connectedUser = auth.login(userEmail, userPassword)
+                    }
+                }) {
                     Text("Login")
                 }
             }
@@ -91,7 +79,7 @@ fun App() {
                 verticalArrangement = Arrangement.Top
             ) {
                 Text("You are connected")
-                Text(user!!.email,
+                Text(connectedUser!!.user.username,
                     style = TextStyle(fontSize = 20.sp),
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally))
@@ -100,29 +88,29 @@ fun App() {
                 Layout(
                     content = {
                         Box(modifier = Modifier.fillMaxSize()) {
-                            Text("Screen size: ${screenSize.value.first}x${screenSize.value.second}px", modifier = Modifier.align(Alignment.Center))
+//                            Text("Screen size: ${screenSize.value.first}x${screenSize.value.second}px", modifier = Modifier.align(Alignment.Center))
 
-//                            VideoPlayerView(modifier = Modifier.fillMaxWidth().fillMaxHeight(),
-//                                url = "https://cdn.pixabay.com/video/2016/05/11/3092-166221773_large.mp4",
-//                                playerConfig = PlayerConfig(
-//                                    isPauseResumeEnabled = true,
-//                                    isSeekBarVisible = false,
-//                                    isDurationVisible = false,
-//                                    isMuteControlEnabled = false,
-//                                    isSpeedControlEnabled = false,
-//                                    isFullScreenEnabled = false,
-//                                    isScreenLockEnabled = false,
-//                                    seekBarThumbColor = Color.Red,
-//                                    seekBarActiveTrackColor = Color.Red,
-//                                    seekBarInactiveTrackColor = Color.White,
-//                                    seekBarBottomPadding = 10.dp,
-//                                    pauseResumeIconSize = 100.dp,
-//                                    isFastForwardBackwardEnabled = true,
-//                                    fastForwardBackwardIconSize = 300.dp,
-//                                    isAutoHideControlEnabled = false,
-//                                    fastBackwardIconResource = Res.drawable.backward
-//                                )
-//                            )
+                            VideoPlayerView(modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                                url = "http://10.0.2.2/videos/cat",
+                                playerConfig = PlayerConfig(
+                                    isPauseResumeEnabled = true,
+                                    isSeekBarVisible = false,
+                                    isDurationVisible = false,
+                                    isMuteControlEnabled = false,
+                                    isSpeedControlEnabled = false,
+                                    isFullScreenEnabled = false,
+                                    isScreenLockEnabled = false,
+                                    seekBarThumbColor = Color.Red,
+                                    seekBarActiveTrackColor = Color.Red,
+                                    seekBarInactiveTrackColor = Color.White,
+                                    seekBarBottomPadding = 10.dp,
+                                    pauseResumeIconSize = 100.dp,
+                                    isFastForwardBackwardEnabled = true,
+                                    fastForwardBackwardIconSize = 300.dp,
+                                    isAutoHideControlEnabled = false,
+                                    fastBackwardIconResource = Res.drawable.backward
+                                )
+                            )
                         }
                     },
                     measurePolicy = { measurables, constraints ->
@@ -170,69 +158,12 @@ fun App() {
 }
 
 @Composable
-fun VideoPlayerViewCustom(videoUrl: String) {
-    val context = LocalViewConfiguration.current
-    val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(Uri.parse(videoUrl)))
-            prepare()
-            playWhenReady = true
-        }
-    }
-
-    var isPlaying by remember { mutableStateOf(true) }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .clickable {
-                isPlaying = if (isPlaying) {
-                    exoPlayer.pause()
-                    false
-                } else {
-                    exoPlayer.play()
-                    true
-                }
-            }
-    ) {
-        AndroidView(factory = {
-            PlayerView(context).apply {
-                player = exoPlayer
-            }
-        }, modifier = Modifier.fillMaxSize())
-    }
-
-    DisposableEffect(
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable {
-                    isPlaying = if (isPlaying) {
-                        exoPlayer.pause()
-                        false
-                    } else {
-                        exoPlayer.play()
-                        true
-                    }
-                }
-        ) {
-            AndroidView(factory = {
-                PlayerView(context).apply {
-                    player = exoPlayer
-                }
-            }, modifier = Modifier.fillMaxSize())
-        }
-    ) {
-        onDispose {
-            exoPlayer.release()
-        }
-    }
-}
-
-@Composable
 fun LoginScreen(viewModel: Auth) {
-    val username = remember { mutableStateOf("") }
-    val password = remember { mutableStateOf("") }
+    var connectedUser: ConnectedUser? by remember { mutableStateOf<ConnectedUser?>(null) }
+    var userEmail: String by remember { mutableStateOf("") }
+    var userPassword: String by remember { mutableStateOf("") }
+    var auth = remember { Auth(apiService = ApiService()) }
+    val coroutineScope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -240,17 +171,23 @@ fun LoginScreen(viewModel: Auth) {
         verticalArrangement = Arrangement.Center
     ) {
         TextField(
-            value = username.value,
-            onValueChange = { username.value = it },
-            label = { Text("Username") }
+            value = userEmail,
+            onValueChange = { userEmail = it },
+            label = { Text("Email") }
         )
+        Spacer(modifier = Modifier.height(10.dp))
         TextField(
-            value = password.value,
-            onValueChange = { password.value = it },
+            value = userPassword,
+            onValueChange = { userPassword = it },
             label = { Text("Password") },
             visualTransformation = PasswordVisualTransformation()
         )
-        Button(onClick = { viewModel.login(username.value, password.value) }) {
+        Spacer(modifier = Modifier.height(20.dp))
+        Button(onClick = {
+            coroutineScope.launch {
+                connectedUser = auth.login(userEmail, userPassword)
+            }
+        }) {
             Text("Login")
         }
     }

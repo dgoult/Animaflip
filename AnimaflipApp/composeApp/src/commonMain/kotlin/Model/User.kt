@@ -1,16 +1,9 @@
 package Model
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class User(
-    val email: String,
-    val firstname: String,
-    val lastname: String,
+    val id: Int,
+    val username: String,
+    val role: String
 )
-
-//    constructor() {
-//    }
-//
-//    constructor(email: String, firstname: String, lastname: String) {
-//        this.email = email
-//        this.firstname = firstname
-//        this.lastname = lastname
-//    }

@@ -10,7 +10,10 @@ class AuthController
 {
     public function login(Request $request, Response $response, $args)
     {
+
         $data = json_decode($request->getBody()->getContents(), true);
+            
+        file_put_contents('debugAuthControllerOne.txt', print_r($data, TRUE));
         
         if (is_null($data)) {
             $response->getBody()->write(json_encode(['error' => 'Invalid JSON']));
@@ -48,7 +51,15 @@ class AuthController
 
             $token = JWT::encode($payload, $secret, 'HS256');
 
-            $response->getBody()->write(json_encode(['token' => $token]));
+            $response->getBody()->write(json_encode([
+                'token' => $token,
+                'user' => [
+                    'id' => $user['id'],
+                    'username' => $user['username'],
+                    'role' => $user['role']]]));
+            
+            file_put_contents('debugAuthController.txt', print_r($response, TRUE));
+
             return $response->withHeader('Content-Type', 'application/json');
         } else {
             return $response->withStatus(401);
