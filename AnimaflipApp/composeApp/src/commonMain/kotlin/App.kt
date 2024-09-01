@@ -82,7 +82,21 @@ fun App() {
                     authToken = connectedUser!!.token,
                     users = users,
                     selectedUser = selectedEditUser,
-                    onBack = { isInAdminPanel = false },
+                    onBack = {
+                        coroutineScope.launch {
+                            val result = apiService.getThemesByUserId(connectedUser!!.token, connectedUser!!.user.id)
+                            result.fold(
+                                onSuccess = { updatedThemes ->
+                                    themes = updatedThemes
+                                    isInAdminPanel = false
+                                },
+                                onFailure = { error ->
+                                    errorMessage = "Erreur lors de la récupération des thèmes : ${error.message}"
+                                    isInAdminPanel = false
+                                }
+                            )
+                        }
+                    },
                     onEditUser = { userId ->
                         val user = users.find { it.id == userId }
                         if (user != null) {
@@ -117,6 +131,9 @@ fun App() {
                                 }
                             )
                         }
+                    },
+                    onUsersUpdated = { updatedUsers ->
+                        users = updatedUsers
                     },
                     onSelectTheme = { theme ->
                         selectedTheme = theme

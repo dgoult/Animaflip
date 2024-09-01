@@ -61,6 +61,13 @@ class User
         $stmt = $pdo->prepare('INSERT INTO user_themes (user_id, theme_id) VALUES (:user_id, :theme_id)');
         return $stmt->execute(['user_id' => $userId, 'theme_id' => $themeId]);
     }
+    
+    public static function unassignThemeFromUser($userId, $themeId)
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('DELETE FROM user_themes WHERE user_id = :user_id AND theme_id = :theme_id');
+        return $stmt->execute(['user_id' => $userId, 'theme_id' => $themeId]);
+    }
 
     public static function updateUser($userId, $username, $password = null, $role = null)
     {

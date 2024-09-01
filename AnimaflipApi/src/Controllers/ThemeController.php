@@ -123,6 +123,23 @@ class ThemeController
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
         }
     }
+
+    public function unassignThemeFromUser(Request $request, Response $response, array $args): Response
+    {
+        $data = json_decode($request->getBody()->getContents(), true);
+        $userId = $data['user_id'];
+        $themeId = $data['theme_id'];
+
+        $result = User::unassignThemeFromUser($userId, $themeId);
+
+        if ($result) {
+            $response->getBody()->write(json_encode(['message' => 'Thème désassigné de l\'utilisateur avec succès.']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+        } else {
+            $response->getBody()->write(json_encode(['error' => 'Erreur lors de la désassignation du thème pour l\'utilisateur.']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    }
 }
 // namespace App\Controllers;
 

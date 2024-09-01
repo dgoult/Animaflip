@@ -25,97 +25,196 @@ fun AdminPanelScreen(
     onEditUser: (Int) -> Unit,
     onDeleteUser: (Int) -> Unit,
     onSaveUser: (EditUser) -> Unit,
+    onUsersUpdated: (List<User>) -> Unit,
     onSelectTheme: (Theme) -> Unit,
 ) {
     var isNewUser by remember { mutableStateOf(false) }
     var isEditing by remember { mutableStateOf(false) }
-    var themesAdminPanel: List<Theme?> by remember { mutableStateOf<List<Theme?>>(emptyList()) }
+    var userThemes: List<Theme?> by remember { mutableStateOf<List<Theme?>>(emptyList()) }
+    var allThemes: List<Theme?> by remember { mutableStateOf<List<Theme?>>(emptyList()) }
+    val coroutineScope = rememberCoroutineScope()
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var successMessage by remember { mutableStateOf<String?>(null) }
 
-
-
-    Column(
+    LazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Button(
-                onClick = onBack,
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color.Green)
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.Start
             ) {
-                Text("Retour", style = TextStyle(fontSize = 20.sp, color = Color.White))
+                Button(
+                    onClick = onBack,
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Green)
+                ) {
+                    Text("Retour", style = TextStyle(fontSize = 20.sp, color = Color.White))
+                }
             }
+
+            Text(text = "Panneau d'administration", style = TextStyle(fontSize = 24.sp))
+            Spacer(modifier = Modifier.height(20.dp))
         }
 
-        Text(text = "Panneau d'administration", style = TextStyle(fontSize = 24.sp))
-
-        Spacer(modifier = Modifier.height(20.dp))
-
         if (isEditing && selectedUser != null) {
-            EditUserForm(
-                editUser = selectedUser,
-                onSave = {
-                    onSaveUser(it)
-                },
-                onCancel = {
-                    isEditing = false
-                }
-            )
-
-            LaunchedEffect(themesAdminPanel) {
-                val themesResult = apiService.getThemesByUserId(authToken, selectedUser.id)
-
-                themesResult.fold(
-                    onSuccess = { fetchedThemes ->
-                        themesAdminPanel = fetchedThemes
-                        errorMessage = null // Réinitialiser le message d'erreur en cas de succès
+            item {
+                EditUserForm(
+                    editUser = selectedUser,
+                    onSave = {
+                        onSaveUser(it)
                     },
-                    onFailure = { error ->
-                        themesAdminPanel = emptyList() // Réinitialiser les thèmes en cas d'erreur
-                        errorMessage = error.message // Stocker le message d'erreur
+                    onCancel = {
+                        isEditing = false
+                    }
+                )
+
+                LaunchedEffect(selectedUser) {
+                    val userThemesResult = apiService.getThemesByUserId(authToken, selectedUser.id)
+                    val allThemesResult = apiService.getAllThemes(authToken)
+
+                    userThemesResult.fold(
+                        onSuccess = { fetchedThemes ->
+                            userThemes = fetchedThemes
+                            errorMessage = null // Réinitialiser le message d'erreur en cas de succès
+                        },
+                        onFailure = { error ->
+                            userThemes = emptyList() // Réinitialiser les thèmes en cas d'erreur
+                            errorMessage = error.message // Stocker le message d'erreur
+                        }
+                    )
+
+                    allThemesResult.fold(
+                        onSuccess = { fetchedThemes ->
+                            allThemes = fetchedThemes
+                            errorMessage = null // Réinitialiser le message d'erreur en cas de succès
+                        },
+                        onFailure = { error ->
+                            allThemes = emptyList() // Réinitialiser les thèmes en cas d'erreur
+                            errorMessage = error.message // Stocker le message d'erreur
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(text = "Thèmes disponibles", style = TextStyle(fontSize = 20.sp))
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+
+            items(allThemes) { theme ->
+                // Messages de succès ou d'erreur
+                successMessage?.let {
+                    Text(text = it, color = Color.Green, style = TextStyle(fontSize = 16.sp))
+                }
+                errorMessage?.let {
+                    Text(text = it, color = Color.Red, style = TextStyle(fontSize = 16.sp))
+                }
+                ThemeRow(
+                    theme = theme!!,
+                    isAssigned = userThemes.any { it?.id == theme.id },
+                    onAssignTheme = {
+                        coroutineScope.launch {
+                            val result = apiService.assignThemeToUser(authToken, selectedUser.id, theme.id)
+                            result.fold(
+                                onSuccess = {
+                                    val themesResult = apiService.getThemesByUserId(authToken, selectedUser.id)
+
+                                    themesResult.fold(
+                                        onSuccess = { fetchedThemes ->
+                                            userThemes = fetchedThemes
+                                            errorMessage = null // Réinitialiser le message d'erreur en cas de succès
+                                        },
+                                        onFailure = { error ->
+                                            errorMessage = error.message // Stocker le message d'erreur
+                                        }
+                                    )
+                                },
+                                onFailure = { error ->
+                                    errorMessage = "Erreur lors de l'affectation du thème : ${error.message}"
+                                }
+                            )
+                        }
+                    },
+                    onUnassignTheme = {
+                        coroutineScope.launch {
+                            val result = apiService.unassignThemeFromUser(authToken, selectedUser.id, theme.id)
+                            result.fold(
+                                onSuccess = {
+                                    userThemes = userThemes.filter { it?.id != theme.id }
+                                },
+                                onFailure = { error ->
+                                    errorMessage = "Erreur lors de la désaffectation du thème : ${error.message}"
+                                }
+                            )
+                        }
                     }
                 )
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Text(text = "Thèmes associés", style = TextStyle(fontSize = 20.sp))
-            LazyColumn(modifier = Modifier.fillMaxHeight()) {
-                items(themesAdminPanel) { theme ->
-                    ThemeRow(theme = theme!!, onSelectTheme = onSelectTheme)
-                }
-            }
         } else if (isNewUser) {
-            NewUserForm(
-                authToken = authToken,
-                apiService = apiService,
-                onCancel = {
-                    isNewUser = false
-                }
-            )
+            item {
+                NewUserForm(
+                    authToken = authToken,
+                    apiService = apiService,
+                    onCancel = {
+                        isNewUser = false
+                    },
+                    onSave = { newUsers ->
+                        onUsersUpdated(newUsers)
+                        isNewUser = false
+                    }
+                )
+            }
         } else {
-            Button(onClick = { isNewUser = true }) {
-                Text("Ajouter un utilisateur")
+            item {
+                Button(onClick = { isNewUser = true }) {
+                    Text("Ajouter un utilisateur")
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            items(users) { user ->
+                UserRow(
+                    user = user,
+                    onEditUser = {
+                        onEditUser(user.id)
+                        isEditing = true
+                    },
+                    onDeleteUser = { onDeleteUser(user.id) }
+                )
+            }
+        }
+    }
+}
 
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(users) { user ->
-                    UserRow(
-                        user = user,
-                        onEditUser = {
-                            onEditUser(user.id)
-                            isEditing = true},
-                        onDeleteUser = { onDeleteUser(user.id) }
-                    )
-                }
+@Composable
+fun ThemeRow(
+    theme: Theme,
+    isAssigned: Boolean,
+    onAssignTheme: () -> Unit,
+    onUnassignTheme: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = theme.libelle, style = TextStyle(fontSize = 18.sp))
+
+        if (isAssigned) {
+            Button(onClick = onUnassignTheme, colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)) {
+                Text("Désaffecter")
+            }
+        } else {
+            Button(onClick = onAssignTheme, colors = ButtonDefaults.buttonColors(backgroundColor = Color.Green)) {
+                Text("Affecter")
             }
         }
     }
@@ -211,27 +310,11 @@ fun EditUserForm(
 }
 
 @Composable
-fun ThemeRow(theme: Theme, onSelectTheme: (Theme) -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(text = theme.libelle, style = TextStyle(fontSize = 18.sp))
-
-        Button(onClick = { onSelectTheme(theme) }) {
-            Text("Voir")
-        }
-    }
-}
-
-@Composable
 fun NewUserForm(
     apiService: ApiService,
     authToken: String,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    onSave: (List<User>) -> Unit
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -284,8 +367,18 @@ fun NewUserForm(
                 val result = apiService.registerUser(authToken, username, password, role)
                 result.fold(
                     onSuccess = {
-                        successMessage = "Utilisateur enregistré avec succès"
-                        errorMessage = null
+                        val usersResult = apiService.getAllUsers(authToken)
+                        usersResult.fold(
+                            onSuccess = { fetchedUsers ->
+                                onSave(fetchedUsers)
+                                successMessage = "Utilisateur enregistré avec succès"
+                                errorMessage = null
+                            },
+                            onFailure = { error ->
+                                errorMessage = "Erreur: ${error.message}"
+                                successMessage = null
+                            }
+                        )
                     },
                     onFailure = { error ->
                         errorMessage = "Erreur: ${error.message}"
@@ -310,6 +403,5 @@ fun NewUserForm(
         Button(onClick = onCancel, colors = ButtonDefaults.buttonColors(backgroundColor = Color.Gray)) {
             Text("Retour à la liste des utilisateurs")
         }
-
     }
 }

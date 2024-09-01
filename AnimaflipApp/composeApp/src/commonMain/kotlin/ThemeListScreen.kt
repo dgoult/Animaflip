@@ -1,6 +1,7 @@
 import Model.ConnectedUser
 import Model.Theme
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,61 +28,66 @@ fun ThemeListScreen(
     onLogout: () -> Unit,
     onAdminPanel: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        if(connectedUser.user.role == "admin") {
-            // Panneau admin
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        item {
+            if (connectedUser.user.role == "admin") {
+                // Panneau admin
+                Button(
+                    onClick = onAdminPanel,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Green)
+                ) {
+                    Text(text = "Panneau Administrateur", style = TextStyle(fontSize = 20.sp, color = Color.White))
+                }
+            }
+
+            // Bouton Se déconnecter
             Button(
-                onClick = onAdminPanel,
+                onClick = onLogout,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color.Green)
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
             ) {
-                Text(text = "Panneau Administrateur", style = TextStyle(fontSize = 20.sp, color = Color.White))
+                Text(text = "Se déconnecter", style = TextStyle(fontSize = 20.sp, color = Color.White))
             }
+
+            // En-tête avec les informations de l'utilisateur connecté
+            Text(
+                text = "Vous êtes connecté !",
+                style = TextStyle(fontSize = 24.sp),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(16.dp)
+            )
+            Text(
+                text = connectedUser.user.username,
+                style = TextStyle(fontSize = 20.sp),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
+            )
         }
 
-        // Bouton Se déconnecter
-        Button(
-            onClick = onLogout,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red)
-        ) {
-            Text(text = "Se déconnecter", style = TextStyle(fontSize = 20.sp, color = Color.White))
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // En-tête avec les informations de l'utilisateur connecté
-        Text(
-            text = "Vous êtes connecté !",
-            style = TextStyle(fontSize = 24.sp),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
-        )
-        Text(
-            text = connectedUser.user.username,
-            style = TextStyle(fontSize = 20.sp),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().padding(8.dp)
-        )
-
-        // Liste des thèmes
-        if(themes != null) {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(themes) { theme ->
-                    ThemeItem(theme = theme, onClick = { onThemeSelected(theme) })
-                }
+        if (themes != null) {
+            items(themes) { theme ->
+                ThemeItem(theme = theme, onClick = { onThemeSelected(theme) })
             }
         } else {
-            errorMessage?.let {
-                Text(
-                    text = it,
-                    color = Color.Red,
-                    style = TextStyle(fontSize = 16.sp),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(8.dp)
-                )
+            item {
+                errorMessage?.let {
+                    Text(
+                        text = it,
+                        color = Color.Red,
+                        style = TextStyle(fontSize = 16.sp),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(8.dp)
+                    )
+                }
             }
         }
     }
@@ -89,10 +95,13 @@ fun ThemeListScreen(
 
 @Composable
 fun ThemeItem(theme: Theme, onClick: () -> Unit) {
-    Button(onClick = onClick, modifier = Modifier
-        .fillMaxWidth()
-        .height(70.dp) // Augmenter la hauteur du bouton
-        .padding(top = 16.dp)) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(70.dp)
+            .padding(top = 16.dp)
+    ) {
         Text(text = theme.libelle, style = TextStyle(fontSize = 20.sp))
     }
 }

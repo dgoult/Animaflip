@@ -50,6 +50,34 @@ class ApiService () {
         }
     }
 
+    suspend fun getAllThemes(authToken: String?): Result<List<Theme>> {
+        if (authToken == null) {
+            return Result.failure(IllegalStateException("User is not authenticated"))
+        }
+
+        return try {
+            val response: HttpResponse = client.get("http://10.0.2.2/api/themes") {
+                headers {
+                    append("Authorization", "$authToken")
+                }
+            }
+
+            if (response.status.isSuccess()) {
+                // Désérialiser uniquement si la réponse est réussie
+                val themes: List<Theme> = response.body()
+                Result.success(themes)
+            } else {
+                val errorMessage = "Erreur lors de la récupération des thèmes: ${response.bodyAsText()}-${response.status}"
+                println(errorMessage)
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            val errorMessage = "Exception lors de la récupération des thèmes: ${e.message}"
+            println(errorMessage)
+            Result.failure(Exception(errorMessage))
+        }
+    }
+
     suspend fun getThemesByUserId(authToken: String?, userId: Int): Result<List<Theme>> {
         if (authToken == null) {
             return Result.failure(IllegalStateException("User is not authenticated"))
@@ -73,6 +101,54 @@ class ApiService () {
             }
         } catch (e: Exception) {
             val errorMessage = "Exception lors de la récupération des thèmes: ${e.message}"
+            println(errorMessage)
+            Result.failure(Exception(errorMessage))
+        }
+    }
+
+    suspend fun assignThemeToUser(authToken: String, userId: Int, themeId: Int): Result<Unit> {
+        return try {
+            val response: HttpResponse = client.post("http://10.0.2.2/api/user/themes/assign") {
+                contentType(ContentType.Application.Json)
+                headers {
+                    append("Authorization", authToken)
+                }
+                setBody(mapOf("user_id" to userId, "theme_id" to themeId))
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(Unit)
+            } else {
+                val errorMessage = "Erreur lors de l'affectation du thème: ${response.bodyAsText()} - ${response.status}"
+                println(errorMessage)
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            val errorMessage = "Exception lors de l'affectation du thème: ${e.message}"
+            println(errorMessage)
+            Result.failure(Exception(errorMessage))
+        }
+    }
+
+    suspend fun unassignThemeFromUser(authToken: String, userId: Int, themeId: Int): Result<Unit> {
+        return try {
+            val response: HttpResponse = client.post("http://10.0.2.2/api/user/themes/unassign") {
+                contentType(ContentType.Application.Json)
+                headers {
+                    append("Authorization", authToken)
+                }
+                setBody(mapOf("user_id" to userId, "theme_id" to themeId))
+            }
+
+            if (response.status.isSuccess()) {
+                Result.success(Unit)
+            } else {
+                val errorMessage = "Erreur lors de la désaffectation du thème: ${response.bodyAsText()} - ${response.status}"
+                println(errorMessage)
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            val errorMessage = "Exception lors de la désaffectation du thème: ${e.message}"
             println(errorMessage)
             Result.failure(Exception(errorMessage))
         }

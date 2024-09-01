@@ -32,6 +32,10 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         ->add(new \App\Middleware\RoleMiddleware('admin'))
         ->add(new \App\Middleware\AuthMiddleware());
 
+    $group->post('/user/themes/unassign', \App\Controllers\ThemeController::class . ':unassignThemeFromUser')
+        ->add(new \App\Middleware\RoleMiddleware('admin'))
+        ->add(new \App\Middleware\AuthMiddleware());
+
     $group->put('/user/{id}', \App\Controllers\AuthController::class . ':updateUser')
         ->add(new \App\Middleware\RoleMiddleware('admin'))
         ->add(new \App\Middleware\AuthMiddleware());
