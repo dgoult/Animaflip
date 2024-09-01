@@ -1,0 +1,9 @@
+Array
+(
+    [id] => 1
+    [0] => 1
+    [username] => admin@admin.com
+    [1] => admin@admin.com
+    [role] => admin
+    [2] => admin
+)
