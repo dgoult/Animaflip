@@ -1,13 +1,12 @@
 import Model.ConnectedUser
+import Model.EditUser
+import Model.Theme
 import Model.User
 import Service.ApiService
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
@@ -16,20 +15,13 @@ import androidx.compose.material.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import animaflipapp.composeapp.generated.resources.Res
-import animaflipapp.composeapp.generated.resources.backward
-import chaintech.videoplayer.model.PlayerConfig
-import chaintech.videoplayer.ui.video.VideoPlayerView
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.layout.Layout
-import kotlinx.coroutines.coroutineScope
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.CircularProgressIndicator
 import kotlinx.coroutines.launch
 
 @Composable
@@ -37,133 +29,147 @@ import kotlinx.coroutines.launch
 fun App() {
     MaterialTheme {
         var connectedUser: ConnectedUser? by remember { mutableStateOf<ConnectedUser?>(null) }
-        var userEmail: String by remember { mutableStateOf("") }
-        var userPassword: String by remember { mutableStateOf("") }
-        var auth = remember { Auth(apiService = ApiService()) }
-
+        var selectedTheme: Theme? by remember { mutableStateOf<Theme?>(null) }
+        var selectedEditUser: EditUser? by remember { mutableStateOf<EditUser?>(null) }
+        val apiService = remember { ApiService() }
+        var themes by remember { mutableStateOf<List<Theme>?>(emptyList()) }
+        var users by remember { mutableStateOf<List<User>>(emptyList()) }
         val coroutineScope = rememberCoroutineScope()
-//        var themes = remember { ApiService().getSampleThemes() }
+        var errorMessage by remember { mutableStateOf<String?>(null) }
+        var isInAdminPanel by remember { mutableStateOf(false) }
 
-        if (connectedUser === null)
-        {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                TextField(
-                    value = userEmail,
-                    onValueChange = { userEmail = it },
-                    label = { Text("Email") }
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                TextField(
-                    value = userPassword,
-                    onValueChange = { userPassword = it },
-                    label = { Text("Password") },
-                    visualTransformation = PasswordVisualTransformation()
-                )
-                Spacer(modifier = Modifier.height(20.dp))
-                Button(onClick = {
-                    coroutineScope.launch {
-                        connectedUser = auth.login(userEmail, userPassword)
+        LaunchedEffect(connectedUser) {
+            if (connectedUser != null) {
+                val themesResult = apiService.getThemesByUserId(connectedUser!!.token, connectedUser!!.user.id)
+
+                themesResult.fold(
+                    onSuccess = { fetchedThemes ->
+                        themes = fetchedThemes
+                        errorMessage = null // Réinitialiser le message d'erreur en cas de succès
+                    },
+                    onFailure = { error ->
+                        errorMessage = error.message // Stocker le message d'erreur
+                        themes = null // Réinitialiser les thèmes en cas d'erreur
                     }
-                }) {
-                    Text("Login")
+                )
+
+                if (connectedUser!!.user.role == "admin") {
+                    val usersResult = apiService.getAllUsers(connectedUser!!.token)
+                    usersResult.fold(
+                        onSuccess = { fetchedUsers ->
+                            users = fetchedUsers
+                            errorMessage = null // Réinitialiser le message d'erreur en cas de succès
+                        },
+                        onFailure = { error ->
+                            errorMessage = error.message // Stocker le message d'erreur
+                        }
+                    )
                 }
             }
-        } else {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
-            ) {
-                Text("You are connected")
-                Text(connectedUser!!.user.username,
-                    style = TextStyle(fontSize = 20.sp),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().align(Alignment.CenterHorizontally))
+        }
 
-                val screenSize = remember { mutableStateOf(Pair(-1, -1)) }
-                Layout(
-                    content = {
-                        Box(modifier = Modifier.fillMaxSize()) {
-//                            Text("Screen size: ${screenSize.value.first}x${screenSize.value.second}px", modifier = Modifier.align(Alignment.Center))
+        when {
+            connectedUser == null -> {
+                LoginScreen(
+                    onLoginSuccess = { user ->
+                        connectedUser = user
+                    }
+                )
+            }
+            isInAdminPanel -> {
+                AdminPanelScreen(
+                    apiService = apiService,
+                    authToken = connectedUser!!.token,
+                    users = users,
+                    selectedUser = selectedEditUser,
+                    onBack = { isInAdminPanel = false },
+                    onEditUser = { userId ->
+                        val user = users.find { it.id == userId }
+                        if (user != null) {
+                            selectedEditUser = EditUser(user.id, user.username, null, user.role)
+                        }
+                    },
+                    onDeleteUser = { userId ->
+                        coroutineScope.launch {
+                            val result = apiService.deleteUser(connectedUser!!.token, userId)
+                            if (result.isSuccess) {
+                                users = users.filterNot { it.id == userId }
+                            } else {
+                                errorMessage = "Erreur lors de la suppression de l'utilisateur."
+                            }
+                        }
+                    },
+                    onSaveUser = { editUser ->
+                        coroutineScope.launch {
+                            val result = apiService.updateUser(connectedUser!!.token, editUser)
 
-                            VideoPlayerView(modifier = Modifier.fillMaxWidth().fillMaxHeight(),
-                                url = "http://10.0.2.2/videos/cat",
-                                playerConfig = PlayerConfig(
-                                    isPauseResumeEnabled = true,
-                                    isSeekBarVisible = false,
-                                    isDurationVisible = false,
-                                    isMuteControlEnabled = false,
-                                    isSpeedControlEnabled = false,
-                                    isFullScreenEnabled = false,
-                                    isScreenLockEnabled = false,
-                                    seekBarThumbColor = Color.Red,
-                                    seekBarActiveTrackColor = Color.Red,
-                                    seekBarInactiveTrackColor = Color.White,
-                                    seekBarBottomPadding = 10.dp,
-                                    pauseResumeIconSize = 100.dp,
-                                    isFastForwardBackwardEnabled = true,
-                                    fastForwardBackwardIconSize = 300.dp,
-                                    isAutoHideControlEnabled = false,
-                                    fastBackwardIconResource = Res.drawable.backward
-                                )
+                            result.fold(
+                                onSuccess = { user -> user as User
+                                    if (editUser.id == 0) {
+                                        users = users + user
+                                    } else {
+                                        users = users.map { if (it.id == user.id) user else it }
+                                    }
+                                    selectedEditUser = null
+                                },
+                                onFailure = { error ->
+                                    errorMessage = "Erreur lors de la sauvegarde de l'utilisateur : ${error.message}"
+                                }
                             )
                         }
                     },
-                    measurePolicy = { measurables, constraints ->
-                        // Use the max width and height from the constraints
-                        val width = constraints.maxWidth
-                        val height = constraints.maxHeight
-
-                        screenSize.value = Pair(width, height)
-                        println("Width: $width, height: $height")
-
-                        // Measure and place children composables
-                        val placeables = measurables.map { measurable ->
-                            measurable.measure(constraints)
-                        }
-
-                        layout(width, height) {
-                            var yPosition = 0
-                            placeables.forEach { placeable ->
-                                placeable.placeRelative(x = 0, y = yPosition)
-                                yPosition += placeable.height
-                            }
-                        }
+                    onSelectTheme = { theme ->
+                        selectedTheme = theme
                     }
                 )
-
-//                Row(modifier = Modifier.padding(start = 20.dp, top = 10.dp)) {
-//                    Box(
-//                        modifier = Modifier.fillMaxSize(),
-//                        contentAlignment = Alignment.Center
-//                    ){
-//                        //
-//                    }
-//                }
-//                val navController = rememberNavController()
-//                NavHost(navController, startDestination = "themeList") {
-//                    composable("themeList") { ThemeListScreen(navController) }
-//                    composable("themeDetail/{themeId}") { backStackEntry ->
-//                        val themeId = backStackEntry.arguments?.getString("themeId")?.toIntOrNull()
-//                        ThemeDetailScreen(themeId)
-//                    }
-//                }
+            }
+            selectedTheme == null -> {
+                ThemeListScreen(
+                    themes = themes,
+                    errorMessage = errorMessage,
+                    connectedUser = connectedUser!!,
+                    onThemeSelected = { theme -> selectedTheme = theme },
+                    onLogout = { connectedUser = null },
+                    onAdminPanel = { isInAdminPanel = true }
+                )
+            }
+            else -> {
+                ThemeDetailScreen(
+                    theme = selectedTheme!!,
+                    connectedUser = connectedUser!!,
+                    onBack = { selectedTheme = null }
+                )
             }
         }
     }
 }
 
+
 @Composable
-fun LoginScreen(viewModel: Auth) {
-    var connectedUser: ConnectedUser? by remember { mutableStateOf<ConnectedUser?>(null) }
-    var userEmail: String by remember { mutableStateOf("") }
-    var userPassword: String by remember { mutableStateOf("") }
-    var auth = remember { Auth(apiService = ApiService()) }
+fun LoginScreen(onLoginSuccess: (ConnectedUser) -> Unit) {
+    var userEmail by remember { mutableStateOf("") }
+    var userPassword by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    val apiService = remember { ApiService() }
+
+    LaunchedEffect(isLoading) {
+        if (isLoading) {
+            try {
+                val user = apiService.login(userEmail, userPassword)
+                if (user != null) {
+                    onLoginSuccess(user)
+                } else {
+                    errorMessage = "Email ou mot de passe incorrect."
+                }
+            } catch (e: Exception) {
+                errorMessage = "Une erreur est survenue : ${e.message}"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -172,23 +178,52 @@ fun LoginScreen(viewModel: Auth) {
     ) {
         TextField(
             value = userEmail,
-            onValueChange = { userEmail = it },
-            label = { Text("Email") }
+            onValueChange = {
+                userEmail = it
+                errorMessage = null
+            },
+            label = { Text("Email") },
+            isError = errorMessage != null
         )
         Spacer(modifier = Modifier.height(10.dp))
         TextField(
             value = userPassword,
-            onValueChange = { userPassword = it },
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation()
+            onValueChange = {
+                userPassword = it
+                errorMessage = null
+            },
+            label = { Text("Mot de passe") },
+            visualTransformation = PasswordVisualTransformation(),
+            isError = errorMessage != null
         )
-        Spacer(modifier = Modifier.height(20.dp))
-        Button(onClick = {
-            coroutineScope.launch {
-                connectedUser = auth.login(userEmail, userPassword)
+        Spacer(modifier = Modifier.height(10.dp))
+
+        errorMessage?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colors.error,
+                style = MaterialTheme.typography.body2,
+                modifier = Modifier.padding(vertical = 8.dp)
+            )
+        }
+
+        Button(
+            onClick = {
+                if (!isLoading) {
+                    isLoading = true
+                }
+            },
+            enabled = !isLoading,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 40.dp)
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colors.onPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            } else {
+                Text("Se connecter")
             }
-        }) {
-            Text("Login")
         }
     }
 }

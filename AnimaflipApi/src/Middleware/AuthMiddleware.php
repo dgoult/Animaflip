@@ -43,6 +43,7 @@ class AuthMiddleware
                 $response->getBody()->write(json_encode(['error' => 'Token expired']));
                 return $response->withHeader('Content-Type', 'application/json')->withStatus(401);
             } catch (\Exception $e) {
+                file_put_contents('ErrorDebugAuthMiddleware.txt', print_r($e, TRUE));
                 $response = new \Slim\Psr7\Response();
                 $response->getBody()->write(json_encode(['error' => 'Unauthorized']));
                 return $response->withHeader('Content-Type', 'application/json')->withStatus(401);

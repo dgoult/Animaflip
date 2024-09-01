@@ -50,6 +50,7 @@ kotlin {
             implementation("io.ktor:ktor-client-logging:2.0.0")
             implementation("io.ktor:ktor-client-content-negotiation:2.0.0")
             implementation("io.ktor:ktor-serialization-kotlinx-json:2.0.0")
+            implementation("io.ktor:ktor-client-okhttp:2.0.0")
             //noinspection UseTomlInstead
 //            implementation("androidx.navigation:navigation-compose:2.4.0-alpha10")
 //            implementation(libs.androidx.lifecycle.viewmodel.compose.v240alpha02)

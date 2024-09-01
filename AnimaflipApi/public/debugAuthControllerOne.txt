@@ -1,0 +1,5 @@
+Array
+(
+    [username] => user1@user.com
+    [password] => user1
+)

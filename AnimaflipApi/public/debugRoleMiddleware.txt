@@ -1,9 +1,9 @@
 Array
 (
-    [id] => 1
-    [0] => 1
-    [username] => admin
-    [1] => admin
+    [id] => 2
+    [0] => 2
+    [username] => user1@user.com
+    [1] => user1@user.com
     [role] => admin
     [2] => admin
 )

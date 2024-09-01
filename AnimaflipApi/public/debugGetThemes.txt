@@ -3,23 +3,47 @@ Array
     [0] => Array
         (
             [id] => 1
-            [libelle] => Nature
+            [libelle] => Transport
             [animations] => Array
                 (
                     [0] => Array
                         (
                             [id] => 1
                             [theme_id] => 1
-                            [libelle] => Oiseaux Chantants
-                            [video_url] => /videos/birds_singing.mp4
+                            [libelle] => Le camion
+                            [video_url] => /videos/camion
                         )
 
                     [1] => Array
                         (
                             [id] => 2
                             [theme_id] => 1
-                            [libelle] => Rivière Coulante
-                            [video_url] => /videos/river_flowing.mp4
+                            [libelle] => Une ambulance
+                            [video_url] => /videos/ambulance
+                        )
+
+                    [2] => Array
+                        (
+                            [id] => 3
+                            [theme_id] => 1
+                            [libelle] => Un avion
+                            [video_url] => /videos/avion
+                        )
+
+                    [3] => Array
+                        (
+                            [id] => 4
+                            [theme_id] => 1
+                            [libelle] => Le bateau
+                            [video_url] => /videos/bateau
+                        )
+
+                    [4] => Array
+                        (
+                            [id] => 5
+                            [theme_id] => 1
+                            [libelle] => Le velo
+                            [video_url] => /videos/velo
                         )
 
                 )
@@ -29,23 +53,39 @@ Array
     [1] => Array
         (
             [id] => 2
-            [libelle] => Technologie
+            [libelle] => Animaux de compagnie
             [animations] => Array
                 (
                     [0] => Array
                         (
-                            [id] => 3
+                            [id] => 6
                             [theme_id] => 2
-                            [libelle] => Démarrage voiture
-                            [video_url] => /videos/startup_car.mp4
+                            [libelle] => Le chat
+                            [video_url] => /videos/chat
                         )
 
                     [1] => Array
                         (
-                            [id] => 4
+                            [id] => 7
                             [theme_id] => 2
-                            [libelle] => Voix Robotique
-                            [video_url] => /videos/robotic_voice.mp4
+                            [libelle] => Le chien
+                            [video_url] => /videos/chien
+                        )
+
+                    [2] => Array
+                        (
+                            [id] => 8
+                            [theme_id] => 2
+                            [libelle] => Le lapin
+                            [video_url] => /videos/lapin
+                        )
+
+                    [3] => Array
+                        (
+                            [id] => 9
+                            [theme_id] => 2
+                            [libelle] => Le cochons-dindes
+                            [video_url] => /videos/cochons-dindes
                         )
 
                 )
@@ -55,23 +95,47 @@ Array
     [2] => Array
         (
             [id] => 3
-            [libelle] => Sport
+            [libelle] => Animaux de la ferme
             [animations] => Array
                 (
                     [0] => Array
                         (
-                            [id] => 5
+                            [id] => 10
                             [theme_id] => 3
-                            [libelle] => Acclamations de la Foule
-                            [video_url] => /videos/crowd_cheering.mp4
+                            [libelle] => La poule
+                            [video_url] => /videos/poule
                         )
 
                     [1] => Array
                         (
-                            [id] => 6
+                            [id] => 11
                             [theme_id] => 3
-                            [libelle] => Sifflement
-                            [video_url] => /videos/whistle_blowing.mp4
+                            [libelle] => Le coq
+                            [video_url] => /videos/coq
+                        )
+
+                    [2] => Array
+                        (
+                            [id] => 12
+                            [theme_id] => 3
+                            [libelle] => Le poussin
+                            [video_url] => /videos/poussin
+                        )
+
+                    [3] => Array
+                        (
+                            [id] => 13
+                            [theme_id] => 3
+                            [libelle] => Le mouton
+                            [video_url] => /videos/mouton
+                        )
+
+                    [4] => Array
+                        (
+                            [id] => 14
+                            [theme_id] => 3
+                            [libelle] => Une oie (test si non fonctionnel)
+                            [video_url] => /videos/oie
                         )
 
                 )
@@ -81,23 +145,89 @@ Array
     [3] => Array
         (
             [id] => 4
-            [libelle] => Musique
+            [libelle] => Animaux sauvages
             [animations] => Array
                 (
                     [0] => Array
                         (
-                            [id] => 7
+                            [id] => 15
                             [theme_id] => 4
-                            [libelle] => Solo de Guitare
-                            [video_url] => /videos/guitar_solo.mp4
+                            [libelle] => Le cerf
+                            [video_url] => /videos/cerf
                         )
 
                     [1] => Array
                         (
-                            [id] => 8
+                            [id] => 16
                             [theme_id] => 4
-                            [libelle] => Mélodie de Piano
-                            [video_url] => /videos/piano_melody.mp4
+                            [libelle] => Le loup
+                            [video_url] => /videos/loup
+                        )
+
+                    [2] => Array
+                        (
+                            [id] => 17
+                            [theme_id] => 4
+                            [libelle] => Le panda-roux
+                            [video_url] => /videos/panda-roux
+                        )
+
+                    [3] => Array
+                        (
+                            [id] => 18
+                            [theme_id] => 4
+                            [libelle] => Le singe
+                            [video_url] => /videos/singe
+                        )
+
+                )
+
+        )
+
+    [4] => Array
+        (
+            [id] => 5
+            [libelle] => Instrument
+            [animations] => Array
+                (
+                    [0] => Array
+                        (
+                            [id] => 19
+                            [theme_id] => 5
+                            [libelle] => La guitare
+                            [video_url] => /videos/guitare
+                        )
+
+                    [1] => Array
+                        (
+                            [id] => 20
+                            [theme_id] => 5
+                            [libelle] => Le ukulele
+                            [video_url] => /videos/ukulele
+                        )
+
+                    [2] => Array
+                        (
+                            [id] => 21
+                            [theme_id] => 5
+                            [libelle] => La harpe
+                            [video_url] => /videos/harpe
+                        )
+
+                    [3] => Array
+                        (
+                            [id] => 22
+                            [theme_id] => 5
+                            [libelle] => Le piano
+                            [video_url] => /videos/piano
+                        )
+
+                    [4] => Array
+                        (
+                            [id] => 23
+                            [theme_id] => 5
+                            [libelle] => Le violon
+                            [video_url] => /videos/violon
                         )
 
                 )
