@@ -1,5 +1,6 @@
 import Model.ConnectedUser
 import Model.Theme
+import Service.ApiConfig
 import Service.ApiService
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -43,7 +44,7 @@ fun ThemeDetailScreen(theme: Theme, connectedUser: ConnectedUser, onBack: () -> 
     // Utiliser LaunchedEffect pour tester l'URL de la vidéo
     LaunchedEffect(currentAnimation.video_url) {
         coroutineScope.launch {
-            val url = "http://10.0.2.2${currentAnimationUrl}"
+            val url = "${ApiConfig.BASE_URL}${currentAnimationUrl}"
             videoError = !apiService.isVideoUrlAccessible(url)
             showPlayer = !videoError
         }
@@ -65,7 +66,7 @@ fun ThemeDetailScreen(theme: Theme, connectedUser: ConnectedUser, onBack: () -> 
         if (currentAnimation.video_url.isNotEmpty() && showPlayer) {
             VideoPlayerView(
                 modifier = Modifier.fillMaxWidth().height(300.dp),
-                url = "http://10.0.2.2${currentAnimationUrl}",
+                url = "${ApiConfig.BASE_URL}${currentAnimationUrl}",
                 playerConfig = PlayerConfig(
                     isPauseResumeEnabled = true,
                     isSeekBarVisible = false,

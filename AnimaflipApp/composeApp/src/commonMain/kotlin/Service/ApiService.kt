@@ -56,7 +56,7 @@ class ApiService () {
         }
 
         return try {
-            val response: HttpResponse = client.get("http://10.0.2.2/api/themes") {
+            val response: HttpResponse = client.get("${ApiConfig.BASE_URL}/api/themes") {
                 headers {
                     append("Authorization", "$authToken")
                 }
@@ -84,7 +84,7 @@ class ApiService () {
         }
 
         return try {
-            val response: HttpResponse = client.get("http://10.0.2.2/api/user/$userId/themes") {
+            val response: HttpResponse = client.get("${ApiConfig.BASE_URL}/api/user/$userId/themes") {
                 headers {
                     append("Authorization", "$authToken")
                 }
@@ -108,7 +108,7 @@ class ApiService () {
 
     suspend fun assignThemeToUser(authToken: String, userId: Int, themeId: Int): Result<Unit> {
         return try {
-            val response: HttpResponse = client.post("http://10.0.2.2/api/user/themes/assign") {
+            val response: HttpResponse = client.post("${ApiConfig.BASE_URL}/api/user/themes/assign") {
                 contentType(ContentType.Application.Json)
                 headers {
                     append("Authorization", authToken)
@@ -132,7 +132,7 @@ class ApiService () {
 
     suspend fun unassignThemeFromUser(authToken: String, userId: Int, themeId: Int): Result<Unit> {
         return try {
-            val response: HttpResponse = client.post("http://10.0.2.2/api/user/themes/unassign") {
+            val response: HttpResponse = client.post("${ApiConfig.BASE_URL}/api/user/themes/unassign") {
                 contentType(ContentType.Application.Json)
                 headers {
                     append("Authorization", authToken)
@@ -155,7 +155,7 @@ class ApiService () {
     }
 
     suspend fun login(email: String, password: String): ConnectedUser? {
-        val response: HttpResponse = client.post("http://10.0.2.2/api/login") {
+        val response: HttpResponse = client.post("${ApiConfig.BASE_URL}/api/login") {
             contentType(ContentType.Application.Json)
             setBody(mapOf("username" to email, "password" to password))
         }
@@ -173,7 +173,7 @@ class ApiService () {
 
     suspend fun getAllUsers(authToken: String): Result<List<User>> {
         return try {
-            val response: HttpResponse = client.get("http://10.0.2.2/api/users") {
+            val response: HttpResponse = client.get("${ApiConfig.BASE_URL}/api/users") {
                 headers {
                     append("Authorization", authToken)
                 }
@@ -196,7 +196,7 @@ class ApiService () {
 
     suspend fun registerUser(authToken: String, username: String, password: String, role: String): Result<Unit> {
         return try {
-            val response: HttpResponse = client.post("http://10.0.2.2/api/register") {
+            val response: HttpResponse = client.post("${ApiConfig.BASE_URL}/api/register") {
                 contentType(ContentType.Application.Json)
                 headers {
                     append("Authorization", "$authToken")
@@ -220,7 +220,7 @@ class ApiService () {
 
     suspend fun updateUser(authToken: String, editUser: EditUser): Result<User> {
         return try {
-            val response: HttpResponse = client.put("http://10.0.2.2/api/user/${editUser.id}") {
+            val response: HttpResponse = client.put("${ApiConfig.BASE_URL}/api/user/${editUser.id}") {
                 contentType(ContentType.Application.Json)
                 headers {
                     append("Authorization", authToken)
@@ -245,7 +245,7 @@ class ApiService () {
 
     suspend fun deleteUser(authToken: String, userId: Int): Result<Unit> {
         return try {
-            val response: HttpResponse = client.delete("http://10.0.2.2/api/user/$userId") {
+            val response: HttpResponse = client.delete("${ApiConfig.BASE_URL}/api/user/$userId") {
                 headers {
                     append("Authorization", authToken)
                 }
