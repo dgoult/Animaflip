@@ -13,6 +13,9 @@ $app = AppFactory::create();
 
 $app->group('/api', function (RouteCollectorProxy $group) {
     $group->post('/login', \App\Controllers\AuthController::class . ':login');
+
+    $group->get('/user/{user_id}/themes', \App\Controllers\ThemeController::class . ':getThemesByUserId')
+    ->add(new \App\Middleware\AuthMiddleware());
     
     $group->post('/register', \App\Controllers\AuthController::class . ':register')
      ->add(new \App\Middleware\RoleMiddleware('admin'))
@@ -26,21 +29,19 @@ $app->group('/api', function (RouteCollectorProxy $group) {
     ->add(new \App\Middleware\RoleMiddleware('admin'))
     ->add(new \App\Middleware\AuthMiddleware());
 
-    $group->get('/user/{user_id}/themes', \App\Controllers\ThemeController::class . ':getThemesByUserId')->add(new \App\Middleware\AuthMiddleware());
+    $group->put('/user/{id}', \App\Controllers\AuthController::class . ':updateUser')
+        ->add(new \App\Middleware\RoleMiddleware('admin'))
+        ->add(new \App\Middleware\AuthMiddleware());
+
+    $group->delete('/user/{id}', \App\Controllers\AuthController::class . ':deleteUser')
+        ->add(new \App\Middleware\RoleMiddleware('admin'))
+        ->add(new \App\Middleware\AuthMiddleware());
 
     $group->post('/user/themes/assign', \App\Controllers\ThemeController::class . ':assignThemeToUser')
         ->add(new \App\Middleware\RoleMiddleware('admin'))
         ->add(new \App\Middleware\AuthMiddleware());
 
     $group->post('/user/themes/unassign', \App\Controllers\ThemeController::class . ':unassignThemeFromUser')
-        ->add(new \App\Middleware\RoleMiddleware('admin'))
-        ->add(new \App\Middleware\AuthMiddleware());
-
-    $group->put('/user/{id}', \App\Controllers\AuthController::class . ':updateUser')
-        ->add(new \App\Middleware\RoleMiddleware('admin'))
-        ->add(new \App\Middleware\AuthMiddleware());
-
-    $group->delete('/user/{id}', \App\Controllers\AuthController::class . ':deleteUser')
         ->add(new \App\Middleware\RoleMiddleware('admin'))
         ->add(new \App\Middleware\AuthMiddleware());
 });
