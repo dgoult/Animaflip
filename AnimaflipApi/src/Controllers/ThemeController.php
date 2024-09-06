@@ -140,6 +140,52 @@ class ThemeController
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
         }
     }
+
+    //API-ADMIN-VIEWS
+
+    protected $view;
+
+    public function __construct(Twig $view)
+    {
+        $this->view = $view;
+    }
+
+    public function listThemes(Request $request, Response $response, array $args): Response
+    {
+        $themes = Theme::all();
+        return $this->view->render($response, 'admin/themes/list.html.twig', ['themes' => $themes]);
+    }
+
+    public function newThemeForm(Request $request, Response $response, array $args): Response
+    {
+        return $this->view->render($response, 'admin/themes/new.html.twig');
+    }
+
+    public function createTheme(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        Theme::create(['libelle' => $data['libelle']]);
+        return $response->withHeader('Location', '/admin/themes')->withStatus(302);
+    }
+
+    public function editThemeForm(Request $request, Response $response, array $args): Response
+    {
+        $theme = Theme::find($args['id']);
+        return $this->view->render($response, 'admin/themes/edit.html.twig', ['theme' => $theme]);
+    }
+
+    public function updateTheme(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        Theme::find($args['id'])->update(['libelle' => $data['libelle']]);
+        return $response->withHeader('Location', '/admin/themes')->withStatus(302);
+    }
+
+    public function deleteTheme(Request $request, Response $response, array $args): Response
+    {
+        Theme::find($args['id'])->delete();
+        return $response->withHeader('Location', '/admin/themes')->withStatus(302);
+    }
 }
 // namespace App\Controllers;
 

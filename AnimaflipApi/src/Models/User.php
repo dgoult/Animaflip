@@ -20,26 +20,53 @@ class User
         return false;
     }
 
-    public static function create($username, $password, $role = 'user')
+    // Créer un utilisateur
+    public static function create($username, $password, $role)
     {
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare('INSERT INTO users (username, password, role) VALUES (:username, :password, :role)');
         return $stmt->execute(['username' => $username, 'password' => $password, 'role' => $role]);
     }
 
-    public static function getById($id)
-    {
-        $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('SELECT id, username, role FROM users WHERE id = :id');
-        $stmt->execute(['id' => $id]);
-        return $stmt->fetch();
-    }
-
+    // Obtenir tous les utilisateurs
     public static function getAllUsers()
     {
         $pdo = Database::getConnection();
-        $stmt = $pdo->query('SELECT id, username, role FROM users');
+        $stmt = $pdo->query('SELECT * FROM users');
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Obtenir un utilisateur par ID
+    public static function getById($userId)
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM users WHERE id = :id');
+        $stmt->execute(['id' => $userId]);
+            
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public static function updateUser($userId, $username, $password = null, $role = null)
+    {
+        $pdo = Database::getConnection();
+            
+        $query = 'UPDATE users SET username = :username';
+        $params = ['username' => $username, 'id' => $userId];
+
+        if (!empty($password)) {
+            $query .= ', password = :password';
+            $params['password'] = password_hash($password, PASSWORD_BCRYPT);
+        }
+
+        if ($role !== null) {
+            $query .= ', role = :role';
+            $params['role'] = $role;
+        }
+
+        $query .= ' WHERE id = :id';
+        
+        $stmt = $pdo->prepare($query);
+        return $stmt->execute($params);
     }
 
     public static function getThemesByUserId($userId)
@@ -67,29 +94,6 @@ class User
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare('DELETE FROM user_themes WHERE user_id = :user_id AND theme_id = :theme_id');
         return $stmt->execute(['user_id' => $userId, 'theme_id' => $themeId]);
-    }
-
-    public static function updateUser($userId, $username, $password = null, $role = null)
-    {
-        $pdo = Database::getConnection();
-        
-        $query = 'UPDATE users SET username = :username';
-        $params = ['username' => $username, 'id' => $userId];
-
-        if ($password !== null) {
-            $query .= ', password = :password';
-            $params['password'] = password_hash($password, PASSWORD_BCRYPT);
-        }
-
-        if ($role !== null) {
-            $query .= ', role = :role';
-            $params['role'] = $role;
-        }
-
-        $query .= ' WHERE id = :id';
-        
-        $stmt = $pdo->prepare($query);
-        return $stmt->execute($params);
     }
 
     public static function deleteUser($userId)

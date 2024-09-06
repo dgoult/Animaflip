@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire Utilisateur</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            margin: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            width: 300px;
+        }
+
+        input, select, button {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .error {
+            color: #ff6b6b;
+            background-color: #ffeeee;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .btn {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-back {
+            background-color: #3d7e9a;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="spacer">
+            <a href="/admin/dashboard/{{ token }}" class="btn btn-back">Retour</a>
+        </div>
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+        <h1>{{ user ? 'Modifier' : 'Créer' }} un Utilisateur</h1>
+        <form method="POST" action="{{ user ? '/admin/user/' ~ user.id ~ '/edit/' ~ token : '/admin/user/create/' ~ token }}">
+            <label for="username">Nom d'utilisateur</label>
+            <input type="text" id="username" name="username" value="{{ user.username ?? '' }}" required>
+
+            <label for="password">Mot de passe</label>
+            <input type="password" id="password" name="password" {{ user ? '' : 'required' }}>
+
+            <label for="role">Rôle</label>
+            <select id="role" name="role">
+                <option value="admin" {{ user.role == 'admin' ? 'selected' : '' }}>Admin</option>
+                <option value="user" {{ user.role == 'user' ? 'selected' : '' }}>Utilisateur</option>
+            </select>
+
+            <button type="submit">{{ user ? 'Mettre à jour' : 'Créer' }}</button>
+        </form>
+    </div>
+</body>
+</html>

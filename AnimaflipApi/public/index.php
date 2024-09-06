@@ -5,11 +5,21 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 use Slim\Routing\RouteCollectorProxy;
+use Slim\Views\Twig;
+use Slim\Views\TwigMiddleware;
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->load();
 
+
+// Créer l'application Slim
 $app = AppFactory::create();
+
+// Créer l'instance Twig et l'ajouter au middleware
+$twig = Twig::create(__DIR__ . '/../src/views', ['cache' => false]);
+
+// Ajouter le middleware Twig à l'application
+$app->add(TwigMiddleware::create($app, $twig));
 
 $app->group('/api', function (RouteCollectorProxy $group) {
     $group->post('/login', \App\Controllers\AuthController::class . ':login');
@@ -48,6 +58,56 @@ $app->group('/api', function (RouteCollectorProxy $group) {
 
 $app->group('/videos', function (RouteCollectorProxy $group) {
     $group->get('/{video_name}/{token}', \App\Controllers\VideosController::class . ':getVideo');
+});
+
+// Définir la route avec accès à Twig via le middleware
+$app->get('/hello/{name}', function (Request $request, Response $response, array $args) use ($twig) {
+    return $twig->render($response, 'login.html.twig', [
+        'name' => $args['name']
+    ]);
+})->setName('profile');
+
+
+// Pannel Admin Auth
+$app->get('/admin/login', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->loginForm($request, $response, $args);
+});
+$app->post('/admin/login', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->login($request, $response, $args);
+});
+$app->get('/admin/logout', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->logout($request, $response, $args);
+});
+
+// Pannel Admin dashboard
+$app->get('/admin/dashboard/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->dashboard($request, $response, $args);
+});
+
+// Pannel Admin User CRUD
+$app->get('/admin/user/create/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->createUserForm($request, $response, $args);
+});
+$app->post('/admin/user/create/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->createUser($request, $response, $args);
+});
+$app->get('/admin/user/{id}/edit/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->updateUserForm($request, $response, $args);
+});
+$app->post('/admin/user/{id}/edit/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->updateUser($request, $response, $args);
+});
+$app->post('/admin/user/{id}/delete/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->deleteUser($request, $response, $args);
 });
 
 $app->get('/test', function (Request $request, Response $response, $args) {

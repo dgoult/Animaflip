@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord - Administration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .spacer {
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-delete {
+            background-color: red;
+        }
+
+        .btn-back {
+            background-color: #3d7e9a;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        .container {
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tableau de Bord</h1>
+        <p>Bienvenue, {{ user.username }} (Rôle: {{ user.role }})</p>
+        <a href="/admin/logout" class="btn btn-back">Déconnexion</a>
+        
+        <h1>Gestion des utilisateurs</h1>
+
+        <div class="spacer">
+            <!-- Ajouter le token directement dans l'URL -->
+            <a href="/admin/user/create/{{ token }}" class="btn">Ajouter un utilisateur</a>
+        </div>
+
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Nom d'utilisateur</th>
+                <th>Rôle</th>
+                <th>Actions</th>
+            </tr>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.role }}</td>
+                <td>
+                    <a href="/admin/user/{{ user.id }}/edit/{{ token }}" class="btn">Modifier</a>
+                    <form method="POST" action="/admin/user/{{ user.id }}/delete/{{ token }}" style="display:inline;">
+                        <button type="submit" class="btn btn-delete">Supprimer</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <h2>Gestion des Thèmes</h2>
+
+        <div class="spacer">
+            <a href="/admin/themes/create/{{ token }}" class="btn">Ajouter un nouveau thème</a>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Libellé</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for theme in themes %}
+                <tr>
+                    <td>{{ theme.id }}</td>
+                    <td>{{ theme.libelle }}</td>
+                    <td>
+                        <a href="/admin/themes/{{ theme.id }}/edit/{{ token }}" class="btn">Modifier</a>
+                        <form action="/admin/themes/{{ theme.id }}/delete/{{ token }}" method="POST" style="display: inline;">
+                            <button type="submit" class="btn btn-delete">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Gestion des Animations</h2>
+        <p>Sélectionnez un thème pour gérer ses animations.</p>
+    </div>
+</body>
+</html>
