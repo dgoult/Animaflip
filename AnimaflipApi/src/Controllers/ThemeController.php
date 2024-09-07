@@ -145,9 +145,18 @@ class ThemeController
 
     protected $view;
 
-    public function __construct(Twig $view)
+    // Le constructeur accepte maintenant $view comme optionnel
+    public function __construct(Twig $view = null)
     {
-        $this->view = $view;
+        if ($view !== null) {
+            $this->view = $view;
+        } else {
+            // Gérer le cas où $view est null, selon tes besoins
+            // Par exemple : Lever une exception ou définir un comportement par défaut
+            // throw new \Exception("Twig view must be provided");
+            // Ou définir un comportement de secours sans Twig :
+            $this->view = null;
+        }
     }
 
     public function listThemes(Request $request, Response $response, array $args): Response
