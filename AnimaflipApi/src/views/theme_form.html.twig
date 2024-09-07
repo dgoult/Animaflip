@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire Thème</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <style>
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="spacer">
+            <a href="/admin/dashboard/{{ token }}" class="btn btn-back">Retour</a>
+        </div>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-title">
+                <h2>{{ theme ? 'Modifier' : 'Créer' }} un thème</h2>
+            </div>
+            <form class="form-custom" method="POST" action="{{ theme ? '/admin/theme/' ~ theme.id ~ '/edit/' ~ token : '/admin/theme/create/' ~ token }}">
+                <label for="themeLibelle">Nom du thème</label>
+                <input type="text" id="themeLibelle" name="themeLibelle" value="{{ theme.libelle ?? '' }}" required>
+
+                <button type="submit">{{ theme ? 'Mettre à jour' : 'Créer' }}</button>
+            </form>
+        </div>
+
+
+        {% if theme %}
+            <div class="card">
+                <div class="card-title">
+                    <h2>Affectation des Animations</h2>
+                </div>
+                <div class="spacer">
+                    <a href="/admin/animation/create/{{ token }}" class="btn">Ajouter une nouvelle animation</a>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom de l'animation</th>
+                            <th>Url de la vidéo</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for animation in assignedAnimations %}
+                        <tr>
+                            <td>{{ animation.id }}</td>
+                            <td>{{ animation.libelle }}</td>
+                            <td class="center-box">
+                                <!-- Afficher la vidéo directement dans la cellule -->
+                                <video class="video-cell" controls>
+                                    <source src="{{ animation.video_url }}/{{ token }}" type="video/mp4">
+                                    Votre navigateur ne prend pas en charge la vidéo.
+                                </video>
+                            </td>
+                            <td>
+                                <a href="/admin/animation/{{ animation.id }}/edit/{{ token }}" class="btn">Modifier</a>
+                                <form action="/admin/animation/{{ animation.id }}/delete/{{ token }}" method="POST" style="display: inline;">
+                                    <button type="submit" class="btn btn-delete">Supprimer</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

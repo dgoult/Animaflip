@@ -6,6 +6,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Views\Twig;
 use App\Models\User;
 use App\Models\Theme;
+use App\Models\Animation;
 use \Firebase\JWT\JWT;
 
 class AdminController
@@ -137,6 +138,38 @@ class AdminController
         return $response->withHeader('Location', '/admin/login')->withStatus(302);
     }
 
+    // Méthode pour affecter un thème à un utilisateur
+    public function assignTheme(Request $request, Response $response, array $args): Response
+    {
+        $token = $args['token'];
+        if (!$this->isAdmin($token)) {
+            return $this->view->render($response, 'login.html.twig', [
+                'error' => 'Accès non authorisé !'
+            ]);
+        }
+
+        User::assignThemeToUser($args['id'], $args['theme_id']);
+
+        // Retourner à la page de modification de l'utilisateur
+        return $response->withHeader('Location', '/admin/user/' . $args['id'] . '/edit/' . $args['token'])->withStatus(302);
+    }
+
+    // Méthode pour désaffecter un thème à un utilisateur
+    public function unassignTheme(Request $request, Response $response, array $args): Response
+    {
+        $token = $args['token'];
+        if (!$this->isAdmin($token)) {
+            return $this->view->render($response, 'login.html.twig', [
+                'error' => 'Accès non authorisé !'
+            ]);
+        }
+
+        User::unassignThemeFromUser($args['id'], $args['theme_id']);
+
+        // Retourner à la page de modification de l'utilisateur
+        return $response->withHeader('Location', '/admin/user/' . $args['id'] . '/edit/' . $args['token'])->withStatus(302);
+    }
+
     // Formulaire de création d'utilisateur
     public function createUserForm(Request $request, Response $response, array $args): Response
     {
@@ -179,7 +212,6 @@ class AdminController
     // Formulaire de mise à jour d'utilisateur
     public function updateUserForm(Request $request, Response $response, array $args): Response
     {
-        // Vérifier si l'utilisateur est admin à partir du token
         $token = $args['token'];
         if (!$this->isAdmin($token)) {
             return $this->view->render($response, 'login.html.twig', [
@@ -187,8 +219,24 @@ class AdminController
             ]);
         }
 
+        // Récupérer l'utilisateur et tous les thèmes
         $user = User::getById($args['id']);
-        return $this->view->render($response, 'user_form.html.twig', ['token' => $args['token'], 'user' => $user]);
+        $themes = Theme::all();
+
+        // Récupérer les thèmes déjà affectés à cet utilisateur
+        $assignedThemes = User::getThemesByUserId($args['id']);
+
+        file_put_contents('updateUserForm.txt', print_r($assignedThemes, TRUE));
+        // Marquer les thèmes comme affectés ou non
+        foreach ($themes as &$theme) {
+            $theme['assigned'] = in_array($theme['id'], array_column($assignedThemes, 'id'));
+        }
+
+        return $this->view->render($response, 'user_form.html.twig', [
+            'token' => $args['token'], 
+            'user' => $user,
+            'themes' => $themes
+        ]);
     }
 
     // Mise à jour d'utilisateur
@@ -231,6 +279,111 @@ class AdminController
         }
 
         $result = User::deleteUser($args['id']);
+
+        if ($result) {
+            return $response->withHeader('Location', "/admin/dashboard/{$args['token']}")->withStatus(302);
+        } else {
+            return $response->withHeader('Location', "/admin/dashboard/{$args['token']}")->withStatus(500);
+        }
+    }
+
+    // Formulaire de création d'un theme
+    public function createThemeForm(Request $request, Response $response, array $args): Response
+    {
+        // Vérifier si l'utilisateur est admin à partir du token
+        $token = $args['token'];
+        if (!$this->isAdmin($token)) {
+            return $this->view->render($response, 'login.html.twig', [
+                'error' => 'Accès non authorisé !'
+            ]);
+        }
+
+        return $this->view->render($response, 'theme_form.html.twig', ['token' => $args['token']]);
+    }
+
+    // Création du thème
+    public function createTheme(Request $request, Response $response, array $args): Response
+    {
+        // Vérifier si l'utilisateur est admin à partir du token
+        $token = $args['token'];
+        if (!$this->isAdmin($token)) {
+            return $this->view->render($response, 'login.html.twig', [
+                'error' => 'Accès non authorisé !'
+            ]);
+        }
+
+        $data = $request->getParsedBody();
+        $themeLibelle = $data['themeLibelle'] ?? null;
+
+        $theme = Theme::create($themeLibelle);
+
+        if ($theme) {
+            return $response->withHeader('Location', '/admin/dashboard/' . $token)->withStatus(302);
+        } else {
+            return $response->withHeader('Location', '/admin/theme/create')->withStatus(500);
+        }
+    }
+
+    // Formulaire de mise à jour d'utilisateur
+    public function updateThemeForm(Request $request, Response $response, array $args): Response
+    {
+        $token = $args['token'];
+        if (!$this->isAdmin($token)) {
+            return $this->view->render($response, 'login.html.twig', [
+                'error' => 'Accès non authorisé !'
+            ]);
+        }
+
+        // Récupérer le thème
+        $theme = Theme::getById($args['id']);
+
+        // Récupérer les animations déjà du thème
+        $assignedAnimations = Animation::allByTheme($args['id']);
+
+        return $this->view->render($response, 'theme_form.html.twig', [
+            'token' => $args['token'], 
+            'theme' => $theme,
+            'assignedAnimations' => $assignedAnimations
+        ]);
+    }
+
+    // Mise à jour du thème
+    public function updateTheme(Request $request, Response $response, array $args): Response
+    {
+        // Vérifier si l'utilisateur est admin à partir du token
+        $token = $args['token'];
+        if (!$this->isAdmin($token)) {
+            return $this->view->render($response, 'login.html.twig', [
+                'error' => 'Accès non authorisé !'
+            ]);
+        }
+
+        $data = $request->getParsedBody();
+        $themeId = $args['id'] ?? null;
+        $themeLibelle = $data['themeLibelle'] ?? null;
+
+        $result = Theme::updateTheme($themeId, $themeLibelle);
+
+        if ($result) {
+            return $response->withHeader('Location', '/admin/dashboard/' . $args['token'])->withStatus(302);
+        } else {
+            $currentUrl = (string)$request->getUri();
+            return $response->withHeader('Location', $currentUrl)->withStatus(500);
+        }
+    }
+
+    // Suppression du thème
+    public function deleteTheme(Request $request, Response $response, array $args): Response
+    {
+        // Vérifier si l'utilisateur est admin à partir du token
+        $token = $args['token'];
+        if (!$this->isAdmin($token)) {
+            return $this->view->render($response, 'login.html.twig', [
+                'error' => 'Accès non authorisé !'
+            ]);
+        }
+
+        $result = Theme::deleteTheme($args['id']);
 
         if ($result) {
             return $response->withHeader('Location', "/admin/dashboard/{$args['token']}")->withStatus(302);

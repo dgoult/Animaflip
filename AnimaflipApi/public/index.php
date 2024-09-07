@@ -110,6 +110,48 @@ $app->post('/admin/user/{id}/delete/{token}', function (Request $request, Respon
     return $controller->deleteUser($request, $response, $args);
 });
 
+//Affectation ThemeUser
+$app->post('/admin/user/{id}/assign-theme/{theme_id}/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->assignTheme($request, $response, $args);
+});
+$app->post('/admin/user/{id}/unassign-theme/{theme_id}/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->unassignTheme($request, $response, $args);
+});
+
+// Pannel Admin Theme CRUD
+$app->get('/admin/theme/create/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->createThemeForm($request, $response, $args);
+});
+$app->post('/admin/theme/create/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->createTheme($request, $response, $args);
+});
+$app->get('/admin/theme/{id}/edit/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->updateThemeForm($request, $response, $args);
+});
+$app->post('/admin/theme/{id}/edit/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->updateTheme($request, $response, $args);
+});
+$app->post('/admin/theme/{id}/delete/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->deleteTheme($request, $response, $args);
+});
+
+// Servir les fichiers statiques (CSS, JS, etc.) à partir du répertoire public
+$app->get('/css', function ($request, $response, $args) {
+    $filePath = __DIR__ . '/../public/css';
+    if (file_exists($filePath)) {
+        return $response->write(file_get_contents($filePath))->withHeader('Content-Type', mime_content_type($filePath));
+    } else {
+        return $response->withStatus(404);
+    }
+});
+
 $app->get('/test', function (Request $request, Response $response, $args) {
     $response->getBody()->write("Slim Framework is working great");
     return $response;

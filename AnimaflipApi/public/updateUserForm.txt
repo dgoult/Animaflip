@@ -1,0 +1,21 @@
+Array
+(
+    [0] => Array
+        (
+            [id] => 3
+            [libelle] => Animaux de la ferme
+        )
+
+    [1] => Array
+        (
+            [id] => 4
+            [libelle] => Animaux sauvages
+        )
+
+    [2] => Array
+        (
+            [id] => 5
+            [libelle] => Instrument
+        )
+
+)

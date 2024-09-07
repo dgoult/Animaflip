@@ -26,4 +26,37 @@ class Theme
             return false;
         }
     }
+
+    // Récupérer un thème par son ID
+    public static function getById($id)
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT * FROM themes WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Créer un nouveau thème
+    public static function create($libelle)
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('INSERT INTO themes (libelle) VALUES (:libelle)');
+        return $stmt->execute(['libelle' => $libelle]);
+    }
+
+    // Mettre à jour un thème
+    public static function updateTheme($id, $libelle)
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('UPDATE themes SET libelle = :libelle WHERE id = :id');
+        return $stmt->execute(['libelle' => $libelle, 'id' => $id]);
+    }
+
+    // Supprimer un thème
+    public static function deleteTheme($id)
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('DELETE FROM themes WHERE id = :id');
+        return $stmt->execute(['id' => $id]);
+    }
 }
