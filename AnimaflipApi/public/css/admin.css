@@ -38,7 +38,6 @@ h1, h2 {
     align-items: center;
 }
 
-
 /* Boutons */
 .btn {
     padding: 10px 15px;
@@ -49,6 +48,15 @@ h1, h2 {
     cursor: pointer;
     text-decoration: none;
     display: inline-block;
+}
+
+td.center-box {
+    vertical-align: top; /* Assurez-vous que le contenu est aligné en haut */
+}
+
+.video-cell {
+    width: 75%;
+    max-width: 500px;
 }
 
 .btn-back {
@@ -87,10 +95,6 @@ th {
     background-color: #f2f2f2;
 }
 
-.video-cell{
-    max-width: 75%;
-}
-
 /* Formulaires */
 .form-custom {
     display: flex;
@@ -121,6 +125,16 @@ button:hover {
 .error {
     color: #ff6b6b;
     background-color: #ffeeee;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Messages d'erreur */
+.success {
+    color: #4CAF50; 
+    background-color: #d8fad9;
     padding: 10px;
     border-radius: 4px;
     margin-bottom: 20px;

@@ -21,11 +21,18 @@ CREATE TABLE themes (
 
 CREATE TABLE animations (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    theme_id INT NOT NULL,
     libelle VARCHAR(255) NOT NULL,
-    video_url VARCHAR(255) NOT NULL,
-    FOREIGN KEY (theme_id) REFERENCES themes(id)
+    video_url VARCHAR(255) NOT NULL
 );
+
+-- Table de liaison entre les thèmes et les animations pour la relation 1.n
+CREATE TABLE theme_animation (
+    theme_id INT NOT NULL,
+    animation_id INT NOT NULL,
+    PRIMARY KEY (theme_id, animation_id),
+    FOREIGN KEY (theme_id) REFERENCES themes(id) ON DELETE CASCADE,
+    FOREIGN KEY (animation_id) REFERENCES animations(id) ON DELETE CASCADE
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 ALTER DATABASE animaflip CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -40,45 +47,63 @@ INSERT INTO themes (libelle) VALUES
 ('Animaux sauvages'),
 ('Instrument');
 
-INSERT INTO animations (theme_id, libelle, video_url) VALUES
--- Thème "Transport"
-((SELECT id FROM themes WHERE libelle = "Transport"), "Le camion", "/videos/camion"),
-((SELECT id FROM themes WHERE libelle = "Transport"), "Une ambulance", "/videos/ambulance"),
-((SELECT id FROM themes WHERE libelle = "Transport"), "Un avion", "/videos/avion"),
-((SELECT id FROM themes WHERE libelle = "Transport"), "Le bateau", "/videos/bateau"),
-((SELECT id FROM themes WHERE libelle = "Transport"), "Le velo", "/videos/velo"),
+-- Insérer des animations
+INSERT INTO animations (libelle, video_url) VALUES
+('Le camion', '/videos/camion'),
+('Une ambulance', '/videos/ambulance'),
+('Un avion', '/videos/avion'),
+('Le bateau', '/videos/bateau'),
+('Le velo', '/videos/velo'),
+('Le chat', '/videos/chat'),
+('Le chien', '/videos/chien'),
+('Le lapin', '/videos/lapin'),
+('Le cochons-dindes', '/videos/cochons-dindes'),
+('La poule', '/videos/poule'),
+('Le coq', '/videos/coq'),
+('Le poussin', '/videos/poussin'),
+('Le mouton', '/videos/mouton'),
+('Une oie', '/videos/oie'),
+('Le cerf', '/videos/cerf'),
+('Le loup', '/videos/loup'),
+('Le panda-roux', '/videos/panda-roux'),
+('Le singe', '/videos/singe'),
+('La guitare', '/videos/guitare'),
+('Le ukulele', '/videos/ukulele'),
+('La harpe', '/videos/harpe'),
+('Le piano', '/videos/piano'),
+('Le violon', '/videos/violon');
 
--- Thème "Animaux de compagnie"
-((SELECT id FROM themes WHERE libelle = "Animaux de compagnie"), "Le chat", "/videos/chat"),
-((SELECT id FROM themes WHERE libelle = "Animaux de compagnie"), "Le chien", "/videos/chien"),
-((SELECT id FROM themes WHERE libelle = "Animaux de compagnie"), "Le lapin", "/videos/lapin"),
-((SELECT id FROM themes WHERE libelle = "Animaux de compagnie"), "Le cochons-dindes", "/videos/cochons-dindes"),
-
--- Thème "Animaux de la ferme"
-((SELECT id FROM themes WHERE libelle = "Animaux de la ferme"), "La poule", "/videos/poule"),
-((SELECT id FROM themes WHERE libelle = "Animaux de la ferme"), "Le coq", "/videos/coq"),
-((SELECT id FROM themes WHERE libelle = "Animaux de la ferme"), "Le poussin", "/videos/poussin"),
-((SELECT id FROM themes WHERE libelle = "Animaux de la ferme"), "Le mouton", "/videos/mouton"),
-((SELECT id FROM themes WHERE libelle = "Animaux de la ferme"), "Une oie (test si non fonctionnel)", "/videos/oie"),
-
--- Thème "Animaux sauvages"
-((SELECT id FROM themes WHERE libelle = "Animaux sauvages"), "Le cerf", "/videos/cerf"),
-((SELECT id FROM themes WHERE libelle = "Animaux sauvages"), "Le loup", "/videos/loup"),
-((SELECT id FROM themes WHERE libelle = "Animaux sauvages"), "Le panda-roux", "/videos/panda-roux"),
-((SELECT id FROM themes WHERE libelle = "Animaux sauvages"), "Le singe", "/videos/singe"),
-
--- Thème "Instrument"
-((SELECT id FROM themes WHERE libelle = 'Instrument'), 'La guitare', "/videos/guitare"),
-((SELECT id FROM themes WHERE libelle = 'Instrument'), 'Le ukulele', "/videos/ukulele"),
-((SELECT id FROM themes WHERE libelle = 'Instrument'), 'La harpe', "/videos/harpe"),
-((SELECT id FROM themes WHERE libelle = 'Instrument'), 'Le piano', "/videos/piano"),
-((SELECT id FROM themes WHERE libelle = 'Instrument'), 'Le violon', "/videos/violon");
+-- Assigner les animations aux thèmes dans la table pivot
+INSERT INTO theme_animation (theme_id, animation_id) VALUES
+((SELECT id FROM themes WHERE libelle = 'Transport'), (SELECT id FROM animations WHERE libelle = 'Le camion')),
+((SELECT id FROM themes WHERE libelle = 'Transport'), (SELECT id FROM animations WHERE libelle = 'Une ambulance')),
+((SELECT id FROM themes WHERE libelle = 'Transport'), (SELECT id FROM animations WHERE libelle = 'Un avion')),
+((SELECT id FROM themes WHERE libelle = 'Transport'), (SELECT id FROM animations WHERE libelle = 'Le bateau')),
+((SELECT id FROM themes WHERE libelle = 'Transport'), (SELECT id FROM animations WHERE libelle = 'Le velo')),
+((SELECT id FROM themes WHERE libelle = 'Animaux de compagnie'), (SELECT id FROM animations WHERE libelle = 'Le chat')),
+((SELECT id FROM themes WHERE libelle = 'Animaux de compagnie'), (SELECT id FROM animations WHERE libelle = 'Le chien')),
+((SELECT id FROM themes WHERE libelle = 'Animaux de compagnie'), (SELECT id FROM animations WHERE libelle = 'Le lapin')),
+((SELECT id FROM themes WHERE libelle = 'Animaux de compagnie'), (SELECT id FROM animations WHERE libelle = 'Le cochons-dindes')),
+((SELECT id FROM themes WHERE libelle = 'Animaux de la ferme'), (SELECT id FROM animations WHERE libelle = 'La poule')),
+((SELECT id FROM themes WHERE libelle = 'Animaux de la ferme'), (SELECT id FROM animations WHERE libelle = 'Le coq')),
+((SELECT id FROM themes WHERE libelle = 'Animaux de la ferme'), (SELECT id FROM animations WHERE libelle = 'Le poussin')),
+((SELECT id FROM themes WHERE libelle = 'Animaux de la ferme'), (SELECT id FROM animations WHERE libelle = 'Le mouton')),
+((SELECT id FROM themes WHERE libelle = 'Animaux de la ferme'), (SELECT id FROM animations WHERE libelle = 'Une oie')),
+((SELECT id FROM themes WHERE libelle = 'Animaux sauvages'), (SELECT id FROM animations WHERE libelle = 'Le cerf')),
+((SELECT id FROM themes WHERE libelle = 'Animaux sauvages'), (SELECT id FROM animations WHERE libelle = 'Le loup')),
+((SELECT id FROM themes WHERE libelle = 'Animaux sauvages'), (SELECT id FROM animations WHERE libelle = 'Le panda-roux')),
+((SELECT id FROM themes WHERE libelle = 'Animaux sauvages'), (SELECT id FROM animations WHERE libelle = 'Le singe')),
+((SELECT id FROM themes WHERE libelle = 'Instrument'), (SELECT id FROM animations WHERE libelle = 'La guitare')),
+((SELECT id FROM themes WHERE libelle = 'Instrument'), (SELECT id FROM animations WHERE libelle = 'Le ukulele')),
+((SELECT id FROM themes WHERE libelle = 'Instrument'), (SELECT id FROM animations WHERE libelle = 'La harpe')),
+((SELECT id FROM themes WHERE libelle = 'Instrument'), (SELECT id FROM animations WHERE libelle = 'Le piano')),
+((SELECT id FROM themes WHERE libelle = 'Instrument'), (SELECT id FROM animations WHERE libelle = 'Le violon'));
 
 -- Ajout d'un utilisateur admin, pswd : admin
 INSERT INTO users (username, password, role) VALUES ('admin@admin.com', '$2y$10$0Kqjjo4ZrJCGKFSgpCOnsubwLv66elX4tntVXLKv6Xq10OfzGskXS', 'admin');
 INSERT INTO users (username, password, role) VALUES ('user@user.com', '$2y$10$8wVAFxLpRVLn8agO.Sh5a.RwV27qDibjycDIMnrnAzeUkgZRQykqm', 'user');
 
--- Ajout de l'accès au thèmes des utilisateurs
+-- Ajout de l'accès aux thèmes des utilisateurs
 CREATE TABLE user_themes (
     user_id INT NOT NULL,
     theme_id INT NOT NULL,

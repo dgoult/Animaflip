@@ -118,11 +118,13 @@ class AdminController
         // Récupérer les utilisateurs et les thèmes depuis la base de données
         $users = User::getAllUsers();
         $themes = Theme::all();
+        $animations = Animation::allWithThemes();
 
         // Afficher le tableau de bord avec les informations utilisateur
         return $this->view->render($response, 'dashboard.html.twig', [
             'token' => $_SESSION['token'], // Token JWT stocké dans la session
             'user' => $_SESSION['user'],  // Informations utilisateur stockées dans la session
+            'animations' => $animations,
             'themes' => $themes,
             'users' => $users
         ]);
@@ -384,6 +386,181 @@ class AdminController
         }
 
         $result = Theme::deleteTheme($args['id']);
+
+        if ($result) {
+            return $response->withHeader('Location', "/admin/dashboard/{$args['token']}")->withStatus(302);
+        } else {
+            return $response->withHeader('Location', "/admin/dashboard/{$args['token']}")->withStatus(500);
+        }
+    }
+    
+    public function createAnimationForm(Request $request, Response $response, array $args): Response
+    {
+        $token = $args['token'];
+        
+        if (!$this->isAdmin($token)) {
+            return $this->view->render($response, 'login.html.twig', ['error' => 'Accès non autorisé']);
+        }
+    
+        $themes = Theme::all();
+    
+        return $this->view->render($response, 'animation_form.html.twig', [
+            'themes' => $themes,
+            'action' => 'Créer',
+            'token' => $token
+        ]);
+    }
+    
+    public function createAnimation(Request $request, Response $response, array $args): Response
+    {
+        // Vérifier si l'utilisateur est admin
+        $token = $args['token'];
+        if (!$this->isAdmin($token)) {
+            return $this->view->render($response, 'login.html.twig', [
+                'error' => 'Accès non autorisé !'
+            ]);
+        }
+
+        // Récupérer les données du formulaire
+        $data = $request->getParsedBody();
+        $libelle = $data['libelle'];
+        $themes = $data['themes'] ?? []; // Récupérer les thèmes sélectionnés
+
+        // Gestion de l'upload de la vidéo
+        $uploadedFiles = $request->getUploadedFiles();
+        $videoFile = $uploadedFiles['video_url'] ?? null;
+
+        if ($videoFile && $videoFile->getError() === UPLOAD_ERR_OK) {
+            // Enregistrer la vidéo sur le serveur
+            $videoUrl = __DIR__ . '/../Videos/' . $videoFile->getClientFilename();
+            $videoFile->moveTo($videoUrl);
+
+            $savedVideoUrl = rtrim('/videos/' . $videoFile->getClientFilename(), '.mp4');
+        } else {
+            // Si aucune nouvelle vidéo n'a été envoyée, utiliser l'ancienne
+            $savedVideoUrl = $data['existing_video_url'] ?? null;
+        }
+
+        // Créer l'animation
+        $animationId = Animation::create($libelle, $savedVideoUrl);
+
+        if ($animationId) {
+            // Assigner les thèmes à l'animation
+            foreach ($themes as $themeId) {
+                Theme::assignAnimationToTheme($themeId, $animationId);
+            }
+
+            return $this->view->render($response, 'animation_form.html.twig', [
+                'success' => 'Animation créer avec succès !',
+                'token' => $token
+            ]);
+        } else {
+            return $this->view->render($response, 'animation_form.html.twig', [
+                'error' => 'Erreur lors de la création de l\'animation !',
+                'token' => $token
+            ]);
+        }
+    }
+
+    public function updateAnimationForm(Request $request, Response $response, array $args): Response
+    {
+        session_start();
+        $token = $args['token'];
+        $animationId = $args['id'];
+    
+        if (!$this->isAdmin($token)) {
+            return $this->view->render($response, 'login.html.twig', ['error' => 'Accès non autorisé']);
+        }
+    
+        // Récupérer l'animation et ses thèmes associés
+        $animation = Animation::getById($animationId);  // Cette méthode doit retourner un objet
+        $themes = Theme::all();  // Tous les thèmes disponibles
+        
+        // Utilise la notation fléchée pour accéder aux thèmes de l'animation
+        $assignedThemes = array_map(function($theme) {
+            return $theme->id; // Récupère les IDs des thèmes assignés
+        }, $animation->themes ?? []);
+
+        // Récupérer le message de succès de la session
+        $successMessage = $_SESSION['success_message'] ?? null;
+        unset($_SESSION['success_message']); // Supprimer le message après l'avoir affiché
+    
+        return $this->view->render($response, 'animation_form.html.twig', [
+            'animation' => $animation,
+            'themes' => $themes,
+            'assignedThemes' => $assignedThemes,
+            'action' => 'Modifier',
+            'token' => $token,
+            'success' => $successMessage
+        ]);
+    }
+    
+    public function updateAnimation(Request $request, Response $response, array $args): Response
+    {
+        $token = $args['token'];
+        $animationId = $args['id'];
+    
+        if (!$this->isAdmin($token)) {
+            return $this->view->render($response, 'login.html.twig', ['error' => 'Accès non autorisé']);
+        }
+    
+        $data = $request->getParsedBody();
+        $libelle = $data['libelle'];
+        $themes = $data['themes'] ?? [];
+    
+        // Gestion de l'upload de la vidéo
+        $uploadedFiles = $request->getUploadedFiles();
+        $videoFile = $uploadedFiles['video_url'] ?? null;
+
+        if ($videoFile && $videoFile->getError() === UPLOAD_ERR_OK) {
+            // Enregistrer la vidéo sur le serveur
+            $videoUrl = __DIR__ . '/../Videos/' . $videoFile->getClientFilename();
+            $videoFile->moveTo($videoUrl);
+
+            $savedVideoUrl = rtrim('/videos/' . $videoFile->getClientFilename(), '.mp4');
+        } else {
+            // Si aucune nouvelle vidéo n'a été envoyée, utiliser l'ancienne
+            $savedVideoUrl = $data['existing_video_url'] ?? null;
+        }
+    
+        // Mettre à jour l'animation
+        $updateSuccess = Animation::updateAnimation($animationId, $libelle, $savedVideoUrl);
+    
+        if ($updateSuccess) {
+            // Détacher tous les thèmes existants
+            Theme::unassignAllThemesFromAnimation($animationId);
+    
+            // Assigner les nouveaux thèmes
+            foreach ($themes as $themeId) {
+                Theme::assignAnimationToTheme($themeId, $animationId);
+            }
+    
+            session_start(); // Assurez-vous que la session est démarrée
+
+            $_SESSION['success_message'] = "Animation mise à jour avec succès !";
+
+            return $response->withHeader('Location', "/admin/animation/{$animationId}/edit/{$token}")->withStatus(302);
+        } else {
+            return $this->view->render($response, 'animation_form.html.twig', [
+                'error' => 'Erreur lors de la mise à jour de l\'animation !',
+                'token' => $token,
+                'animation' => $data
+            ]);
+        }
+    }
+
+    // Suppression de l'animation
+    public function deleteAnimation(Request $request, Response $response, array $args): Response
+    {
+        // Vérifier si l'utilisateur est admin à partir du token
+        $token = $args['token'];
+        if (!$this->isAdmin($token)) {
+            return $this->view->render($response, 'login.html.twig', [
+                'error' => 'Accès non authorisé !'
+            ]);
+        }
+
+        $result = Animation::deleteAnimation($args['id']);
 
         if ($result) {
             return $response->withHeader('Location', "/admin/dashboard/{$args['token']}")->withStatus(302);

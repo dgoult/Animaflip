@@ -107,6 +107,18 @@ class ThemeController
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    //API-ADMIN-VIEWS
+    protected $view;
+
+    public function __construct(Twig $view = null)
+    {
+        if ($view !== null) {
+            $this->view = $view;
+        } else {
+            $this->view = null;
+        }
+    }
+
     public function assignThemeToUser(Request $request, Response $response, array $args): Response
     {
         $data = json_decode($request->getBody()->getContents(), true);
@@ -140,23 +152,29 @@ class ThemeController
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
         }
     }
-
-    //API-ADMIN-VIEWS
-
-    protected $view;
-
-    // Le constructeur accepte maintenant $view comme optionnel
-    public function __construct(Twig $view = null)
+    
+    public function assignAnimationToTheme(Request $request, Response $response, array $args): Response
     {
-        if ($view !== null) {
-            $this->view = $view;
-        } else {
-            // Gérer le cas où $view est null, selon tes besoins
-            // Par exemple : Lever une exception ou définir un comportement par défaut
-            // throw new \Exception("Twig view must be provided");
-            // Ou définir un comportement de secours sans Twig :
-            $this->view = null;
-        }
+        $themeId = $args['theme_id'];
+        $animationId = $args['animation_id'];
+    
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('INSERT INTO theme_animation (theme_id, animation_id) VALUES (:theme_id, :animation_id)');
+        $stmt->execute(['theme_id' => $themeId, 'animation_id' => $animationId]);
+    
+        return $response->withHeader('Location', '/admin/theme/' . $themeId . '/edit')->withStatus(302);
+    }
+    
+    public function unassignAnimationFromTheme(Request $request, Response $response, array $args): Response
+    {
+        $themeId = $args['theme_id'];
+        $animationId = $args['animation_id'];
+    
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('DELETE FROM theme_animation WHERE theme_id = :theme_id AND animation_id = :animation_id');
+        $stmt->execute(['theme_id' => $themeId, 'animation_id' => $animationId]);
+    
+        return $response->withHeader('Location', '/admin/theme/' . $themeId . '/edit')->withStatus(302);
     }
 
     public function listThemes(Request $request, Response $response, array $args): Response

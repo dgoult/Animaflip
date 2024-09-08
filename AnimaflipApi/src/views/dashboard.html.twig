@@ -4,11 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Animaflip - Panneau d'administration</title>
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="/css/admin.css">
 </head>
-<style> 
+<style>
     .card {
         width: 75%;
+    }
+    /* Pagination */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        list-style: none;
+        padding: 0;
+    }
+
+    .pagination li {
+        margin: 0 5px;
+    }
+
+    .pagination a {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #333;
+        cursor: pointer;
+    }
+
+    .pagination a.active {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    /* Rechercher */
+    .search-container {
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .search-container input {
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        width: 50%;
+    }
+
+    .search-container select {
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        width: 20%;
     }
 </style>
 <body>
@@ -59,7 +107,6 @@
             </table>
         </div>
         
-        
         <div class="card">
             <div class="card-title">
                 <div class="title-section">
@@ -101,10 +148,163 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="card">
+            <div class="card-title">
+                <h2>Gestion des animations</h2>
+            </div>
+
+            <div class="spacer">
+                <a href="/admin/animation/create/{{ token }}" class="btn">Ajouter une nouvelle animation</a>
+            </div>
+
+            <!-- Barre de recherche et filtre -->
+            <div class="search-container">
+                <p id="animationCount"></p>
+                <input type="text" id="searchInput" placeholder="Rechercher une animation..." onkeyup="searchAnimations()">
+                <select id="themeFilter" onchange="filterByTheme()">
+                    <option value="">Tous les thèmes</option>
+                    {% for theme in themes %}
+                    <option value="{{ theme.id }}">{{ theme.libelle }}</option>
+                    {% endfor %}
+                </select>
+                <nav aria-label="Page navigation">
+                    <ul id="pagination" class="pagination"></ul>
+                </nav>
+            </div>
+
+            <table id="animationTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom de l'animation</th>
+                        <th>Thèmes associés</th>
+                        <th>Url de la vidéo</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="animationTableBody">
+                    {% for animation in animations %}
+                    <tr data-theme-ids="{{ animation.themes | map(theme => theme.id) | join(',') }}">
+                        <td>{{ animation.id }}</td>
+                        <td>{{ animation.libelle }}</td>
+                        <td>
+                            <ul>
+                                {% for theme in animation.themes %}
+                                    <li>{{ theme.libelle }}</li>
+                                {% endfor %}
+                            </ul>  
+                        </td>
+                        <td class="center-box">
+                            <video class="video-cell" controls>
+                                <source src="{{ animation.video_url }}/{{ token }}" type="video/mp4">
+                                Votre navigateur ne prend pas en charge la vidéo.
+                            </video>
+                        </td>
+                        <td class="align-actions">
+                            <a href="/admin/animation/{{ animation.id }}/edit/{{ token }}" class="btn">Modifier</a>
+                            <form action="/admin/animation/{{ animation.id }}/delete/{{ token }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-delete">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation">
+                <ul id="pagination" class="pagination"></ul>
+            </nav>
+        </div>
     </div>
 </body>
 </html>
 <script>
+    function searchAnimations() {
+        let searchInput = document.getElementById('searchInput').value.toLowerCase();
+        let rows = document.querySelectorAll('#animationTableBody tr');
+        
+        rows.forEach(row => {
+            let libelle = row.cells[1].textContent.toLowerCase();
+            // Affiche uniquement les animations dont le nom correspond à la recherche
+            row.style.display = libelle.includes(searchInput) ? '' : 'none';
+        });
+
+        updateAnimationCount(); // Mettre à jour le nombre d'animations affichées après la recherche
+    }
+
+    function filterByTheme() {
+        let selectedTheme = document.getElementById('themeFilter').value;
+        let rows = document.querySelectorAll('#animationTableBody tr');
+        
+        rows.forEach(row => {
+            let themeIds = row.getAttribute('data-theme-ids').split(',');
+            // Affiche uniquement les animations correspondant au thème sélectionné
+            row.style.display = (selectedTheme === '' || themeIds.includes(selectedTheme)) ? '' : 'none';
+        });
+
+        updateAnimationCount(); // Mettre à jour le nombre d'animations affichées après le filtrage
+    }
+
+    function updateAnimationCount() {
+        let visibleRows = document.querySelectorAll('#animationTableBody tr:not([style*="display: none"])').length;
+        document.getElementById('animationCount').textContent = 'Total : ' + visibleRows;
+    }
+
+    // Initialisation
+    window.onload = function () {
+        updateAnimationCount(); // Mise à jour du compteur au chargement de la page
+    };
+
+    // Le code commenté qui suit est le test semi-fonctionel de la pagination
+
+    // let animationsPerPage = 5;
+    // let currentPage = 1;
+    // let totalAnimations = document.querySelectorAll('#animationTableBody tr').length;
+    // let totalPages = Math.ceil(totalAnimations / animationsPerPage);
+
+    // function showPage(page) {
+    //     let rows = document.querySelectorAll('#animationTableBody tr');
+    //     rows.forEach((row, index) => {
+    //         row.style.display = (index >= (page - 1) * animationsPerPage && index < page * animationsPerPage) ? '' : 'none';
+    //     });
+    //     updateAnimationCount();
+    // }
+
+    // function createPagination() {
+    //     let pagination = document.getElementById('pagination');
+    //     pagination.innerHTML = '';
+    //     for (let i = 1; i <= totalPages; i++) {
+    //         let li = document.createElement('li');
+    //         let link = document.createElement('a');
+    //         link.href = '#';
+    //         link.innerHTML = i;
+    //         link.classList.add('page-link');
+    //         if (i === currentPage) {
+    //             link.classList.add('active');
+    //         }
+    //         link.onclick = function() { changePage(i); };
+    //         li.appendChild(link);
+    //         pagination.appendChild(li);
+    //     }
+    // }
+
+    // function changePage(page) {
+    //     currentPage = page;
+    //     showPage(currentPage);
+    //     createPagination();
+    // }
+    
+    // function updateAnimationCount() {
+    //     let visibleRows = document.querySelectorAll('#animationTableBody tr:not([style*="display: none"])').length;
+    //     document.getElementById('animationCount').textContent = 'Total : ' + visibleRows;
+    // }
+
+    // // Initialisation
+    // showPage(currentPage);
+    // createPagination();
+
     function toggleInfoPanelUser() {
         var infoPanelUser = document.getElementById("info-panel-user");
         
@@ -116,6 +316,15 @@
     }
     function toggleInfoPanelTheme() {
         var infoPanelTheme = document.getElementById("info-panel-theme");
+        
+        if (infoPanelTheme.style.display === "none" || infoPanelTheme.style.display === "") {
+            infoPanelTheme.style.display = "block";
+        } else {
+            infoPanelTheme.style.display = "none";
+        }
+    }
+    function toggleInfoPanelAnimation() {
+        var infoPanelTheme = document.getElementById("info-panel-animation");
         
         if (infoPanelTheme.style.display === "none" || infoPanelTheme.style.display === "") {
             infoPanelTheme.style.display = "block";

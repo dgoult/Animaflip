@@ -58,5 +58,21 @@ class Theme
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare('DELETE FROM themes WHERE id = :id');
         return $stmt->execute(['id' => $id]);
+    }    
+    
+    // Assigner une animation à un thème
+    public static function assignAnimationToTheme($themeId, $animationId)
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('INSERT INTO theme_animation (theme_id, animation_id) VALUES (:theme_id, :animation_id)');
+        $stmt->execute(['theme_id' => $themeId, 'animation_id' => $animationId]);
+    }
+
+    // Désassigner tous les thèmes d'une animation
+    public static function unassignAllThemesFromAnimation($animationId)
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('DELETE FROM theme_animation WHERE animation_id = :animation_id');
+        $stmt->execute(['animation_id' => $animationId]);
     }
 }

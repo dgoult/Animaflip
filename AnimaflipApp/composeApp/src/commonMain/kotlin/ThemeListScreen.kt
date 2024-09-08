@@ -75,7 +75,9 @@ fun ThemeListScreen(
 
         if (themes != null) {
             items(themes) { theme ->
-                ThemeItem(theme = theme, onClick = { onThemeSelected(theme) })
+                if (theme.animations.isNotEmpty()) {
+                    ThemeItem(theme = theme, onClick = { onThemeSelected(theme) })
+                }
             }
         } else {
             item {

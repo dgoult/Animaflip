@@ -7,6 +7,7 @@ use Slim\Factory\AppFactory;
 use Slim\Routing\RouteCollectorProxy;
 use Slim\Views\Twig;
 use Slim\Views\TwigMiddleware;
+use Twig\Extension\DebugExtension;
 
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->load();
@@ -16,7 +17,13 @@ $dotenv->load();
 $app = AppFactory::create();
 
 // Créer l'instance Twig et l'ajouter au middleware
-$twig = Twig::create(__DIR__ . '/../src/views', ['cache' => false]);
+$twig = Twig::create(__DIR__ . '/../src/views', [
+    'debug' => true,
+    'cache' => false, // Désactiver la mise en cache
+]);
+
+// Ajouter l'extension de débogage à Twig
+$twig->addExtension(new DebugExtension());
 
 // Ajouter le middleware Twig à l'application
 $app->add(TwigMiddleware::create($app, $twig));
@@ -140,6 +147,28 @@ $app->post('/admin/theme/{id}/edit/{token}', function (Request $request, Respons
 $app->post('/admin/theme/{id}/delete/{token}', function (Request $request, Response $response, array $args) use ($twig) {
     $controller = new \App\Controllers\AdminController($twig);
     return $controller->deleteTheme($request, $response, $args);
+});
+
+// Pannel Admin Animation CRUD
+$app->get('/admin/animation/create/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->createAnimationForm($request, $response, $args);
+});
+$app->post('/admin/animation/create/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->createAnimation($request, $response, $args);
+});
+$app->get('/admin/animation/{id}/edit/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->updateAnimationForm($request, $response, $args);
+});
+$app->post('/admin/animation/{id}/edit/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->updateAnimation($request, $response, $args);
+});
+$app->post('/admin/animation/{id}/delete/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->deleteAnimation($request, $response, $args);
 });
 
 // Servir les fichiers statiques (CSS, JS, etc.) à partir du répertoire public
