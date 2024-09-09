@@ -4,6 +4,7 @@ use App\Database;
 
 use PDO;
 use PDOException;
+use \Exception;
 
 class User
 {
@@ -41,9 +42,9 @@ class User
             error_log('Erreur PDOException capturée : ' . $e->getMessage());
             // Gestion spécifique de l'exception de contrainte d'unicité (duplicate entry)
             if ($e->getCode() == 23000) {
-                throw 'Un utilisateur avec ce nom existe déjà.';
+                throw new \Exception('Un utilisateur avec ce nom existe déjà.');
             } else {
-                throw 'Erreur lors de la création de l\'utilisateur: ' . $e->getMessage();
+                throw new \Exception('Erreur lors de la création de l\'utilisateur: ') . $e->getMessage();
             }
         }
     }
