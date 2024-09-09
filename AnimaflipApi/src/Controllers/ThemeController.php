@@ -107,18 +107,6 @@ class ThemeController
         return $response->withHeader('Content-Type', 'application/json');
     }
 
-    //API-ADMIN-VIEWS
-    protected $view;
-
-    public function __construct(Twig $view = null)
-    {
-        if ($view !== null) {
-            $this->view = $view;
-        } else {
-            $this->view = null;
-        }
-    }
-
     public function assignThemeToUser(Request $request, Response $response, array $args): Response
     {
         $data = json_decode($request->getBody()->getContents(), true);
@@ -151,66 +139,5 @@ class ThemeController
             $response->getBody()->write(json_encode(['error' => 'Erreur lors de la désassignation du thème pour l\'utilisateur.']));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
         }
-    }
-    
-    public function assignAnimationToTheme(Request $request, Response $response, array $args): Response
-    {
-        $themeId = $args['theme_id'];
-        $animationId = $args['animation_id'];
-    
-        $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO theme_animation (theme_id, animation_id) VALUES (:theme_id, :animation_id)');
-        $stmt->execute(['theme_id' => $themeId, 'animation_id' => $animationId]);
-    
-        return $response->withHeader('Location', '/admin/theme/' . $themeId . '/edit')->withStatus(302);
-    }
-    
-    public function unassignAnimationFromTheme(Request $request, Response $response, array $args): Response
-    {
-        $themeId = $args['theme_id'];
-        $animationId = $args['animation_id'];
-    
-        $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('DELETE FROM theme_animation WHERE theme_id = :theme_id AND animation_id = :animation_id');
-        $stmt->execute(['theme_id' => $themeId, 'animation_id' => $animationId]);
-    
-        return $response->withHeader('Location', '/admin/theme/' . $themeId . '/edit')->withStatus(302);
-    }
-
-    public function listThemes(Request $request, Response $response, array $args): Response
-    {
-        $themes = Theme::all();
-        return $this->view->render($response, 'admin/themes/list.html.twig', ['themes' => $themes]);
-    }
-
-    public function newThemeForm(Request $request, Response $response, array $args): Response
-    {
-        return $this->view->render($response, 'admin/themes/new.html.twig');
-    }
-
-    public function createTheme(Request $request, Response $response, array $args): Response
-    {
-        $data = $request->getParsedBody();
-        Theme::create(['libelle' => $data['libelle']]);
-        return $response->withHeader('Location', '/admin/themes')->withStatus(302);
-    }
-
-    public function editThemeForm(Request $request, Response $response, array $args): Response
-    {
-        $theme = Theme::find($args['id']);
-        return $this->view->render($response, 'admin/themes/edit.html.twig', ['theme' => $theme]);
-    }
-
-    public function updateTheme(Request $request, Response $response, array $args): Response
-    {
-        $data = $request->getParsedBody();
-        Theme::find($args['id'])->update(['libelle' => $data['libelle']]);
-        return $response->withHeader('Location', '/admin/themes')->withStatus(302);
-    }
-
-    public function deleteTheme(Request $request, Response $response, array $args): Response
-    {
-        Theme::find($args['id'])->delete();
-        return $response->withHeader('Location', '/admin/themes')->withStatus(302);
     }
 }
