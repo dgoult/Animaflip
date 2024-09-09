@@ -17,14 +17,14 @@
 
         <div class="card">
             <div class="card-title">
-                <h2>{{ user ? 'Modifier' : 'Créer' }} un utilisateur</h2>
+                <h2>{{ user.id ? 'Modifier' : 'Créer' }} un utilisateur</h2>
             </div>
-            <form class="form-custom" method="POST" action="{{ user ? '/admin/user/' ~ user.id ~ '/edit/' ~ token : '/admin/user/create/' ~ token }}">
+            <form class="form-custom" method="POST" action="{{ user.id ? '/admin/user/' ~ user.id ~ '/edit/' ~ token : '/admin/user/create/' ~ token }}">
                 <label for="username">Nom d'utilisateur</label>
                 <input type="text" id="username" name="username" value="{{ user.username ?? '' }}" required>
 
                 <label for="password">Mot de passe</label>
-                <input type="password" id="password" name="password" {{ user ? '' : 'required' }}>
+                <input type="password" id="password" name="password" {{ user.id ? '' : 'required' }}>
 
                 <label for="role">Rôle</label>
                 <select style="margin-bottom: 20px;" id="role" name="role">
@@ -34,12 +34,17 @@
 
                 <button type="submit">{{ user ? 'Mettre à jour' : 'Créer' }}</button>
             </form>
+            {% if user.id %}
+                <form method="POST" action="/admin/user/{{ user.id }}/delete/{{ token }}" style="display:inline;">
+                    <button type="submit" class="btn btn-delete">Supprimer</button>
+                </form>
+            {% endif %}
         </div>
 
         <br>
         
         
-        {% if user %}
+        {% if user.id %}
             <div class="card">
                 <div class="card-title">
                     <h2>Affectation des thèmes de l'utilisateur : {{user.username}}</h2>

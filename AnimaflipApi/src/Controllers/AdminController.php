@@ -9,6 +9,9 @@ use App\Models\Theme;
 use App\Models\Animation;
 use \Firebase\JWT\JWT;
 
+use PDOException;
+use \Exception;
+
 class AdminController
 {
     protected $view;
@@ -193,21 +196,34 @@ class AdminController
         $token = $args['token'];
         if (!$this->isAdmin($token)) {
             return $this->view->render($response, 'login.html.twig', [
-                'error' => 'Accès non authorisé !'
+                'error' => 'Accès non autorisé !'
             ]);
         }
 
-        $data = $request->getParsedBody();
-        $username = $data['username'];
-        $password = password_hash($data['password'], PASSWORD_BCRYPT);
-        $role = $data['role'];
+        try {
+            $data = $request->getParsedBody();
+            $username = $data['username'];
+            $password = password_hash($data['password'], PASSWORD_BCRYPT);
+            $role = $data['role'];
 
-        $user = User::create($username, $password, $role);
+            // Tenter de créer l'utilisateur
+            $user = User::create($username, $password, $role);
 
-        if ($user) {
-            return $response->withHeader('Location', '/admin/dashboard/' . $token)->withStatus(302);
-        } else {
-            return $response->withHeader('Location', '/admin/user/create')->withStatus(500);
+            if ($user) {
+                return $response->withHeader('Location', '/admin/dashboard/' . $token)->withStatus(302);
+            } else {
+                return $this->view->render($response, 'user_form.html.twig', [
+                    'error' => 'Impossible de créer l\'utilisateur.',
+                    'token' => $token
+                ]);
+            }
+        } catch (\Exception $e) {
+            $errorMsg = 'Erreur lors de la création de l\'utilisateur: ' . $e->getMessage();
+            // Renvoyer le message d'erreur proprement
+            return $this->view->render($response, 'user_form.html.twig', [
+                'error' => $errorMsg,
+                'token' => $token
+            ]);
         }
     }
 
@@ -228,7 +244,6 @@ class AdminController
         // Récupérer les thèmes déjà affectés à cet utilisateur
         $assignedThemes = User::getThemesByUserId($args['id']);
 
-        file_put_contents('updateUserForm.txt', print_r($assignedThemes, TRUE));
         // Marquer les thèmes comme affectés ou non
         foreach ($themes as &$theme) {
             $theme['assigned'] = in_array($theme['id'], array_column($assignedThemes, 'id'));
@@ -252,20 +267,26 @@ class AdminController
             ]);
         }
 
-        $data = $request->getParsedBody();
-        $userId = $args['id'] ?? null;
-        $username = $data['username'] ?? null;
-        $password = $data['password'] ?? null;
-        $role = $data['role'] ?? null;
+        try {
+            $data = $request->getParsedBody();
+            $userId = $args['id'] ?? null;
+            $username = $data['username'] ?? null;
+            $password = $data['password'] ?? null;
+            $role = $data['role'] ?? null;
 
-        $result = User::updateUser($userId, $username, $password, $role);
+            $result = User::updateUser($userId, $username, $password, $role);
 
-        if ($result) {
-            return $response->withHeader('Location', '/admin/dashboard/' . $args['token'])->withStatus(302);
-        } else {
-            $currentUrl = (string)$request->getUri();
-        file_put_contents('passwordddd.txt', print_r($currentUrl, TRUE));
-            return $response->withHeader('Location', $currentUrl)->withStatus(500); //, '/admin/user/' . $args['id'] . '/edit/' . $args['token']
+            if ($result) {
+                return $response->withHeader('Location', '/admin/dashboard/' . $args['token'])->withStatus(302);
+            } else {
+                $currentUrl = (string)$request->getUri();
+                return $response->withHeader('Location', $currentUrl)->withStatus(500);
+            }
+        } catch (\Exception $e) {
+            return $this->view->render($response, 'user_form.html.twig', [
+                'error' => $e->getMessage(),
+                'token' => $token
+            ]);
         }
     }
 
@@ -280,12 +301,19 @@ class AdminController
             ]);
         }
 
-        $result = User::deleteUser($args['id']);
+        try {
+            $result = User::deleteUser($args['id']);
 
-        if ($result) {
-            return $response->withHeader('Location', "/admin/dashboard/{$args['token']}")->withStatus(302);
-        } else {
-            return $response->withHeader('Location', "/admin/dashboard/{$args['token']}")->withStatus(500);
+            if ($result) {
+                return $response->withHeader('Location', "/admin/dashboard/{$args['token']}")->withStatus(302);
+            } else {
+                return $response->withHeader('Location', "/admin/dashboard/{$args['token']}")->withStatus(500);
+            }
+        } catch (\Exception $e) {
+            return $this->view->render($response, 'user_form.html.twig', [
+                'error' => $e->getMessage(),
+                'token' => $token
+            ]);
         }
     }
 
@@ -314,15 +342,38 @@ class AdminController
             ]);
         }
 
-        $data = $request->getParsedBody();
-        $themeLibelle = $data['themeLibelle'] ?? null;
+        try {
 
-        $theme = Theme::create($themeLibelle);
+            $data = $request->getParsedBody();
+            $themeLibelle = $data['libelle'] ?? null;
 
-        if ($theme) {
-            return $response->withHeader('Location', '/admin/dashboard/' . $token)->withStatus(302);
-        } else {
-            return $response->withHeader('Location', '/admin/theme/create')->withStatus(500);
+            $themeId = Theme::create($themeLibelle);
+
+            if ($themeId) {
+                $newTheme = Theme::getById($themeId);
+                $animations = Animation::all();
+        
+                // Récupérer les animations déjà du thème
+                $assignedAnimations = Animation::allByTheme($themeId);
+                $assignedAnimationIds = Animation::allIdsByTheme($themeId);
+        
+                return $this->view->render($response, 'theme_form.html.twig', [
+                    'successTheme' => 'Thème créer avec succès !',
+                    'token' => $token,
+                    'theme' => $newTheme,
+                    'assignedAnimationIds' => $assignedAnimationIds,
+                    'allAnimations' => $animations,
+                    'assignedAnimations' => $assignedAnimations
+                ]);
+            } else {
+                return $response->withHeader('Location', '/admin/theme/create')->withStatus(500);
+            }
+        } catch (\Exception $e) {
+            return $this->view->render($response, 'theme_form.html.twig', [
+                'error' => $e->getMessage(),
+                'theme' => $data,
+                'token' => $token
+            ]);
         }
     }
 
@@ -364,17 +415,24 @@ class AdminController
             ]);
         }
 
-        $data = $request->getParsedBody();
-        $themeId = $args['id'] ?? null;
-        $themeLibelle = $data['themeLibelle'] ?? null;
+        try {
+            $data = $request->getParsedBody();
+            $themeId = $args['id'] ?? null;
+            $themeLibelle = $data['libelle'] ?? null;
 
-        $result = Theme::updateTheme($themeId, $themeLibelle);
+            $result = Theme::updateTheme($themeId, $themeLibelle);
 
-        if ($result) {
-            return $response->withHeader('Location', '/admin/dashboard/' . $args['token'])->withStatus(302);
-        } else {
-            $currentUrl = (string)$request->getUri();
-            return $response->withHeader('Location', $currentUrl)->withStatus(500);
+            if ($result) {
+                return $response->withHeader('Location', '/admin/dashboard/' . $args['token'])->withStatus(302);
+            } else {
+                $currentUrl = (string)$request->getUri();
+                return $response->withHeader('Location', $currentUrl)->withStatus(500);
+            }
+        } catch (\Exception $e) {
+            return $this->view->render($response, 'theme_form.html.twig', [
+                'error' => $e->getMessage(),
+                'token' => $token
+            ]);
         }
     }
 
@@ -391,33 +449,40 @@ class AdminController
             ]);
         }
 
-        // Récupérer les animations sélectionnées depuis le formulaire
-        $data = $request->getParsedBody();
-        $animations = $data['animations'] ?? [];
+        try {
+            // Récupérer les animations sélectionnées depuis le formulaire
+            $data = $request->getParsedBody();
+            $animations = $data['animations'] ?? [];
 
-        $theme = Theme::getById($args['id']);
-        $allAnimations = Animation::all();
+            $theme = Theme::getById($args['id']);
+            $allAnimations = Animation::all();
 
-        // Détacher toutes les animations du thème existant
-        Theme::unassignAllAnimationsFromTheme($themeId);
+            // Détacher toutes les animations du thème existant
+            Theme::unassignAllAnimationsFromTheme($themeId);
 
-        // Assigner les nouvelles animations au thème
-        foreach ($animations as $animationId) {
-            Theme::assignAnimationToTheme($animationId, $themeId);
+            // Assigner les nouvelles animations au thème
+            foreach ($animations as $animationId) {
+                Theme::assignAnimationToTheme($animationId, $themeId);
+            }
+
+            $assignedAnimations = Animation::allByTheme($themeId);
+            $assignedAnimationIds = Animation::allIdsByTheme($themeId);
+
+            return $this->view->render($response, 'theme_form.html.twig', [
+                'token' => $token, 
+                'theme' => $theme,
+                'assignedAnimationIds' => $assignedAnimationIds,
+                'allAnimations' => $allAnimations,
+                'animations' => $animations,
+                'success' => 'Animation(s) affectée(s) avec succès !',
+                'assignedAnimations' => $assignedAnimations
+            ]);
+        } catch (\Exception $e) {
+            return $this->view->render($response, 'theme_form.html.twig', [
+                'error' => $e->getMessage(),
+                'token' => $token
+            ]);
         }
-
-        $assignedAnimations = Animation::allByTheme($themeId);
-        $assignedAnimationIds = Animation::allIdsByTheme($themeId);
-
-        return $this->view->render($response, 'theme_form.html.twig', [
-            'token' => $token, 
-            'theme' => $theme,
-            'assignedAnimationIds' => $assignedAnimationIds,
-            'allAnimations' => $allAnimations,
-            'animations' => $animations,
-            'success' => 'Animations affectées avec succès !',
-            'assignedAnimations' => $assignedAnimations
-        ]);
     }
 
     // Suppression du thème
@@ -467,42 +532,59 @@ class AdminController
             ]);
         }
 
-        // Récupérer les données du formulaire
-        $data = $request->getParsedBody();
-        $libelle = $data['libelle'];
-        $themes = $data['themes'] ?? []; // Récupérer les thèmes sélectionnés
+        try {
+            // Récupérer les données du formulaire
+            $data = $request->getParsedBody();
+            $libelle = $data['libelle'];
+            $themes = $data['themes'] ?? []; // Récupérer les thèmes sélectionnés
+            $allThemes = Theme::all();
+            
+            // Gestion de l'upload de la vidéo
+            $uploadedFiles = $request->getUploadedFiles();
+            $videoFile = $uploadedFiles['video_url'] ?? null;
 
-        // Gestion de l'upload de la vidéo
-        $uploadedFiles = $request->getUploadedFiles();
-        $videoFile = $uploadedFiles['video_url'] ?? null;
+            if ($videoFile && $videoFile->getError() === UPLOAD_ERR_OK) {
+                // Enregistrer la vidéo sur le serveur
+                $videoUrl = __DIR__ . '/../Videos/' . $videoFile->getClientFilename();
+                $videoFile->moveTo($videoUrl);
 
-        if ($videoFile && $videoFile->getError() === UPLOAD_ERR_OK) {
-            // Enregistrer la vidéo sur le serveur
-            $videoUrl = __DIR__ . '/../Videos/' . $videoFile->getClientFilename();
-            $videoFile->moveTo($videoUrl);
-
-            $savedVideoUrl = rtrim('/videos/' . $videoFile->getClientFilename(), '.mp4');
-        } else {
-            // Si aucune nouvelle vidéo n'a été envoyée, utiliser l'ancienne
-            $savedVideoUrl = $data['existing_video_url'] ?? null;
-        }
-
-        // Créer l'animation
-        $animationId = Animation::create($libelle, $savedVideoUrl);
-
-        if ($animationId) {
-            // Assigner les thèmes à l'animation
-            foreach ($themes as $themeId) {
-                Theme::assignAnimationToTheme($animationId, $themeId);
+                $savedVideoUrl = rtrim('/videos/' . $videoFile->getClientFilename(), '.mp4');
+            } else {
+                // Si aucune nouvelle vidéo n'a été envoyée, utiliser l'ancienne
+                $savedVideoUrl = $data['existing_video_url'] ?? null;
             }
 
+            // Créer l'animation
+            $animationId = Animation::create($libelle, $savedVideoUrl);
+
+            if ($animationId) {
+                // Assigner les thèmes à l'animation
+                foreach ($themes as $themeId) {
+                    Theme::assignAnimationToTheme($animationId, $themeId);
+                }
+
+                $animation = Animation::getById($animationId);
+                return $this->view->render($response->withHeader('Location', "/admin/animation/{$animationId}/edit/{$token}")->withStatus(302), 'animation_form.html.twig', [
+                    'success' => 'Animation créer avec succès !',
+                    'animation' => $animation,
+                    'assignedThemes' => $themes,
+                    'token' => $token
+                ]);
+            } else {
+                return $this->view->render($response, 'animation_form.html.twig', [
+                    'error' => 'Erreur lors de la création de l\'animation !',
+                    'animation' => $data,
+                    'assignedThemes' => $themes,
+                    'themes' => $allThemes,
+                    'token' => $token
+                ]);
+            }
+        } catch (\Exception $e) {
             return $this->view->render($response, 'animation_form.html.twig', [
-                'success' => 'Animation créer avec succès !',
-                'token' => $token
-            ]);
-        } else {
-            return $this->view->render($response, 'animation_form.html.twig', [
-                'error' => 'Erreur lors de la création de l\'animation !',
+                'error' => $e->getMessage(),
+                'animation' => $data,
+                'assignedThemes' => $themes,
+                'themes' => $allThemes,
                 'token' => $token
             ]);
         }
@@ -549,48 +631,61 @@ class AdminController
         if (!$this->isAdmin($token)) {
             return $this->view->render($response, 'login.html.twig', ['error' => 'Accès non autorisé']);
         }
-    
-        $data = $request->getParsedBody();
-        $libelle = $data['libelle'];
-        $themes = $data['themes'] ?? [];
-    
-        // Gestion de l'upload de la vidéo
-        $uploadedFiles = $request->getUploadedFiles();
-        $videoFile = $uploadedFiles['video_url'] ?? null;
 
-        if ($videoFile && $videoFile->getError() === UPLOAD_ERR_OK) {
-            // Enregistrer la vidéo sur le serveur
-            $videoUrl = __DIR__ . '/../Videos/' . $videoFile->getClientFilename();
-            $videoFile->moveTo($videoUrl);
+        try {    
+            $data = $request->getParsedBody();
+            $libelle = $data['libelle'];
+            $themes = $data['themes'] ?? [];
+            $allThemes = Theme::all();  // Tous les thèmes disponibles
+        
+            // Gestion de l'upload de la vidéo
+            $uploadedFiles = $request->getUploadedFiles();
+            $videoFile = $uploadedFiles['video_url'] ?? null;
 
-            $savedVideoUrl = rtrim('/videos/' . $videoFile->getClientFilename(), '.mp4');
-        } else {
-            // Si aucune nouvelle vidéo n'a été envoyée, utiliser l'ancienne
-            $savedVideoUrl = $data['existing_video_url'] ?? null;
-        }
-    
-        // Mettre à jour l'animation
-        $updateSuccess = Animation::updateAnimation($animationId, $libelle, $savedVideoUrl);
-    
-        if ($updateSuccess) {
-            // Détacher tous les thèmes existants
-            Theme::unassignAllThemesFromAnimation($animationId);
-    
-            // Assigner les nouveaux thèmes
-            foreach ($themes as $themeId) {
-                Theme::assignAnimationToTheme($animationId, $themeId);
+            if ($videoFile && $videoFile->getError() === UPLOAD_ERR_OK) {
+                // Enregistrer la vidéo sur le serveur
+                $videoUrl = __DIR__ . '/../Videos/' . $videoFile->getClientFilename();
+                $videoFile->moveTo($videoUrl);
+
+                $savedVideoUrl = rtrim('/videos/' . $videoFile->getClientFilename(), '.mp4');
+            } else {
+                // Si aucune nouvelle vidéo n'a été envoyée, utiliser l'ancienne
+                $savedVideoUrl = $data['existing_video_url'] ?? null;
             }
-    
-            session_start(); // Assurez-vous que la session est démarrée
+        
+            // Mettre à jour l'animation
+            $updateSuccess = Animation::updateAnimation($animationId, $libelle, $savedVideoUrl);
+                    
+            if ($updateSuccess) {
+                // Détacher tous les thèmes existants
+                Theme::unassignAllThemesFromAnimation($animationId);
+        
+                // Assigner les nouveaux thèmes
+                foreach ($themes as $themeId) {
+                    Theme::assignAnimationToTheme($animationId, $themeId);
+                }
 
-            $_SESSION['success_message'] = "Animation mise à jour avec succès !";
-
-            return $response->withHeader('Location', "/admin/animation/{$animationId}/edit/{$token}")->withStatus(302);
-        } else {
+                $animation = Animation::getById($animationId);
+                return $this->view->render($response, 'animation_form.html.twig', [
+                    'success' => 'Animation mise à jour avec succès !',
+                    'animation' => $animation,
+                    'assignedThemes' => $themes,
+                    'themes' => $allThemes,
+                    'token' => $token
+                ]);
+            } else {
+                return $this->view->render($response, 'animation_form.html.twig', [
+                    'error' => 'Erreur lors de la mise à jour de l\'animation !',
+                    'token' => $token,
+                    'animation' => $data
+                ]);
+            }
+        } catch (\Exception $e) {
             return $this->view->render($response, 'animation_form.html.twig', [
-                'error' => 'Erreur lors de la mise à jour de l\'animation !',
-                'token' => $token,
-                'animation' => $data
+                'error' => 'Erreur lors de la mise à jour de l\'animation ! ' . $e->getMessage(),
+                'animation' => $data,
+                'themes' => $allThemes,
+                'token' => $token
             ]);
         }
     }

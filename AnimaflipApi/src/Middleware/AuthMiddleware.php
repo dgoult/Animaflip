@@ -16,8 +16,6 @@ class AuthMiddleware
         if ($authHeader) {
             $token = str_replace('Bearer ', '', $authHeader[0]);
 
-            file_put_contents('debugAuthMiddleware2.txt', print_r($token, TRUE));
-
             try {
                 $secret = $_ENV['JWT_SECRET'];
                 $decoded = JWT::decode($token, new \Firebase\JWT\Key($secret, 'HS256'));

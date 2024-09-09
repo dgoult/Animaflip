@@ -36,9 +36,9 @@
 
         <div class="card">
             <div class="card-title">
-                <h2>{{ animation ? 'Modifier' : 'Créer' }} une animation</h2>
+                <h2>{{ animation.id ? 'Modifier' : 'Créer' }} une animation</h2>
             </div>
-            <form class="form-custom" method="POST" action="{{ animation ? '/admin/animation/' ~ animation.id ~ '/edit/' ~ token : '/admin/animation/create/' ~ token }}" enctype="multipart/form-data">
+            <form class="form-custom" method="POST" action="{{ animation.id ? '/admin/animation/' ~ animation.id ~ '/edit/' ~ token : '/admin/animation/create/' ~ token }}" enctype="multipart/form-data">
                 {% if animation %}
                     <input type="hidden" name="existing_video_url" value="{{ animation.video_url }}">
                 {% endif %}
@@ -58,7 +58,7 @@
             
                 <div class="spacer" style="margin-top: 10px;">
                     <label for="video_url">Vidéo (MP4 uniquement)</label>
-                    <input type="file" id="video_url" name="video_url" accept="video/mp4" {{ animation ? '' : 'required' }}>
+                    <input type="file" id="video_url" name="video_url" accept="video/mp4" {{ animation.id ? '' : 'required' }}>
                 </div>
             
                 <div class="spacer">
@@ -72,8 +72,14 @@
                     </select>
                 </div>
             
-                <button class="spacer" type="submit">{{ animation ? 'Mettre à jour' : 'Créer' }}</button>
+                <button class="spacer" type="submit">{{ animation.id ? 'Mettre à jour' : 'Créer' }}</button>
             </form>
+            
+            {% if animation.id %}
+                <form action="/admin/animation/{{ animation.id }}/delete/{{ token }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-delete">Supprimer</button>
+                </form>
+            {% endif %}
         </div>
     </div>
 </body>

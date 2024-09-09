@@ -3,9 +3,18 @@ namespace App\Models;
 
 use App\Database;
 use PDO;
+use PDOException;
 
 class Theme
 {
+    // Vérifier si le libellé existe déjà
+    public static function libelleExists($libelle) {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM themes WHERE libelle = :libelle");
+        $stmt->execute(['libelle' => $libelle]);
+        return $stmt->fetchColumn() > 0;
+    }
+
     public static function all()
     {
         try {
@@ -39,17 +48,34 @@ class Theme
     // Créer un nouveau thème
     public static function create($libelle)
     {
-        $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO themes (libelle) VALUES (:libelle)');
-        return $stmt->execute(['libelle' => $libelle]);
+        if (self::libelleExists($libelle)) {
+            throw new \Exception("Le libellé du thème existe déjà.");
+        }
+
+        try {
+            $pdo = Database::getConnection();
+            $stmt = $pdo->prepare('INSERT INTO themes (libelle) VALUES (:libelle)');
+            $stmt->execute(['libelle' => $libelle]);
+            return $pdo->lastInsertId();
+        } catch (PDOException $e) {
+            // En cas d'erreur, enregistrer un message d'erreur et renvoyer false
+            error_log('Erreur lors de la création du thème: ' . $e->getMessage());
+            return false;
+        }
     }
 
     // Mettre à jour un thème
     public static function updateTheme($id, $libelle)
     {
-        $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('UPDATE themes SET libelle = :libelle WHERE id = :id');
-        return $stmt->execute(['libelle' => $libelle, 'id' => $id]);
+        try {
+            $pdo = Database::getConnection();
+            $stmt = $pdo->prepare('UPDATE themes SET libelle = :libelle WHERE id = :id');
+            return $stmt->execute(['libelle' => $libelle, 'id' => $id]);
+        } catch (PDOException $e) {
+            // En cas d'erreur, enregistrer un message d'erreur et renvoyer false
+            error_log('Erreur lors de la mise à jour de l\'animation: ' . $e->getMessage());
+            return false;
+        }
     }
 
     // Supprimer un thème
@@ -63,12 +89,18 @@ class Theme
     // Assigner une animation à un thème
     public static function assignAnimationToTheme($animationId, $themeId)
     {
-        $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO theme_animation (theme_id, animation_id) VALUES (:theme_id, :animation_id)');
-        $stmt->execute([
-            'theme_id' => $themeId,
-            'animation_id' => $animationId
-        ]);
+        try {
+            $pdo = Database::getConnection();
+            $stmt = $pdo->prepare('INSERT INTO theme_animation (theme_id, animation_id) VALUES (:theme_id, :animation_id)');
+            $stmt->execute([
+                'theme_id' => $themeId,
+                'animation_id' => $animationId
+            ]);
+        } catch (PDOException $e) {
+            // En cas d'erreur, enregistrer un message d'erreur et renvoyer false
+            error_log('Erreur lors de la mise à jour de l\'animation: ' . $e->getMessage());
+            return false;
+        }
     }
 
     // Désassigner tous les thèmes d'une animation

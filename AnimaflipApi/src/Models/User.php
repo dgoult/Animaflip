@@ -3,6 +3,7 @@ namespace App\Models;
 use App\Database;
 
 use PDO;
+use PDOException;
 
 class User
 {
@@ -23,9 +24,28 @@ class User
     // Créer un utilisateur
     public static function create($username, $password, $role)
     {
-        $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('INSERT INTO users (username, password, role) VALUES (:username, :password, :role)');
-        return $stmt->execute(['username' => $username, 'password' => $password, 'role' => $role]);
+        try {
+            $pdo = Database::getConnection();
+            $stmt = $pdo->prepare('INSERT INTO users (username, password, role) VALUES (:username, :password, :role)');
+            $result = $stmt->execute(['username' => $username, 'password' => $password, 'role' => $role]);
+
+            // Vérifier si l'exécution s'est bien passée, sinon loguer
+            if (!$result) {
+                $errorInfo = $stmt->errorInfo();
+                error_log('Erreur lors de l\'insertion : ' . print_r($errorInfo, true));
+            }
+
+            return $pdo->lastInsertId();
+        } catch (PDOException $e) {
+            // Log de l'exception pour vérifier si elle est bien capturée
+            error_log('Erreur PDOException capturée : ' . $e->getMessage());
+            // Gestion spécifique de l'exception de contrainte d'unicité (duplicate entry)
+            if ($e->getCode() == 23000) {
+                throw 'Un utilisateur avec ce nom existe déjà.';
+            } else {
+                throw 'Erreur lors de la création de l\'utilisateur: ' . $e->getMessage();
+            }
+        }
     }
 
     // Obtenir tous les utilisateurs
@@ -48,25 +68,31 @@ class User
 
     public static function updateUser($userId, $username, $password = null, $role = null)
     {
-        $pdo = Database::getConnection();
+        try {
+            $pdo = Database::getConnection();
+                
+            $query = 'UPDATE users SET username = :username';
+            $params = ['username' => $username, 'id' => $userId];
+
+            if (!empty($password)) {
+                $query .= ', password = :password';
+                $params['password'] = password_hash($password, PASSWORD_BCRYPT);
+            }
+
+            if ($role !== null) {
+                $query .= ', role = :role';
+                $params['role'] = $role;
+            }
+
+            $query .= ' WHERE id = :id';
             
-        $query = 'UPDATE users SET username = :username';
-        $params = ['username' => $username, 'id' => $userId];
-
-        if (!empty($password)) {
-            $query .= ', password = :password';
-            $params['password'] = password_hash($password, PASSWORD_BCRYPT);
+            $stmt = $pdo->prepare($query);
+            return $stmt->execute($params);
+        } catch (PDOException $e) {
+            // En cas d'erreur, enregistrer un message d'erreur et renvoyer false
+            error_log('Erreur lors de la modification de l\'utilisateur: ' . $e->getMessage());
+            return false;
         }
-
-        if ($role !== null) {
-            $query .= ', role = :role';
-            $params['role'] = $role;
-        }
-
-        $query .= ' WHERE id = :id';
-        
-        $stmt = $pdo->prepare($query);
-        return $stmt->execute($params);
     }
 
     public static function getThemesByUserId($userId)

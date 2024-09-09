@@ -3,10 +3,18 @@ namespace App\Models;
 
 use App\Database;
 use PDO;
-
+use PDOException;
 
 class Animation
 {
+    // Vérifier si le libellé existe déjà
+    public static function libelleExists($libelle) {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM animations WHERE libelle = :libelle");
+        $stmt->execute(['libelle' => $libelle]);
+        return $stmt->fetchColumn() > 0;
+    }
+    
     public static function all()
     {
         try {
@@ -142,6 +150,10 @@ class Animation
     // Créer une nouvelle animation
     public static function create($libelle, $videoUrl)
     {
+        if (self::libelleExists($libelle)) {
+            throw new \Exception("Le libellé de l'animation existe déjà.");
+        }
+
         try {
             $pdo = Database::getConnection();
             $stmt = $pdo->prepare('INSERT INTO animations (libelle, video_url) VALUES (:libelle, :video_url)');
