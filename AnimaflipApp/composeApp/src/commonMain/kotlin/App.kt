@@ -42,7 +42,7 @@ fun App() {
 
         fun refreshThemes() {
             coroutineScope.launch {
-                val result = apiService.getAllThemes(authToken = connectedUser!!.token)
+                val result = apiService.getThemesByUserId(authToken = connectedUser!!.token, connectedUser!!.user.id)
                 result.fold(
                     onSuccess = { fetchedThemes ->
                         themes = fetchedThemes
