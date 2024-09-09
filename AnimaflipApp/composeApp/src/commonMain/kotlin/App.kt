@@ -38,6 +38,21 @@ fun App() {
         var errorMessage by remember { mutableStateOf<String?>(null) }
         var isInAdminPanel by remember { mutableStateOf(false) }
 
+        fun refreshThemes() {
+            coroutineScope.launch {
+                val result = apiService.getAllThemes(authToken = connectedUser!!.token)
+                result.fold(
+                    onSuccess = { fetchedThemes ->
+                        themes = fetchedThemes
+                        errorMessage = null
+                    },
+                    onFailure = { error ->
+                        errorMessage = error.message
+                    }
+                )
+            }
+        }
+
         LaunchedEffect(connectedUser) {
             if (connectedUser != null) {
                 val themesResult = apiService.getThemesByUserId(connectedUser!!.token, connectedUser!!.user.id)
@@ -147,7 +162,8 @@ fun App() {
                     connectedUser = connectedUser!!,
                     onThemeSelected = { theme -> selectedTheme = theme },
                     onLogout = { connectedUser = null },
-                    onAdminPanel = { isInAdminPanel = true }
+                    onAdminPanel = { isInAdminPanel = true },
+                    onRefresh = { refreshThemes() }
                 )
             }
             else -> {

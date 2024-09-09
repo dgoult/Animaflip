@@ -26,7 +26,8 @@ fun ThemeListScreen(
     connectedUser: ConnectedUser,
     onThemeSelected: (Theme) -> Unit,
     onLogout: () -> Unit,
-    onAdminPanel: () -> Unit
+    onAdminPanel: () -> Unit,
+    onRefresh: () -> Unit
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         item {
@@ -71,6 +72,17 @@ fun ThemeListScreen(
 
         item {
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Bouton Rafraîchir
+            Button(
+                onClick = onRefresh,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(18.dp),
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color.LightGray)
+            ) {
+                Text(text = "Rafraîchir la liste", style = TextStyle(fontSize = 20.sp, color = Color.White))
+            }
         }
 
         if (themes != null) {
