@@ -21,7 +21,9 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.ui.text.input.ImeAction
 import kotlinx.coroutines.launch
 
 @Composable
@@ -216,7 +218,10 @@ fun LoginScreen(onLoginSuccess: (ConnectedUser) -> Unit) {
                 errorMessage = null
             },
             label = { Text("Email") },
-            isError = errorMessage != null
+            isError = errorMessage != null,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Next // Passer au champ suivant avec "Entrée"
+            )
         )
         Spacer(modifier = Modifier.height(10.dp))
         TextField(
@@ -227,7 +232,10 @@ fun LoginScreen(onLoginSuccess: (ConnectedUser) -> Unit) {
             },
             label = { Text("Mot de passe") },
             visualTransformation = PasswordVisualTransformation(),
-            isError = errorMessage != null
+            isError = errorMessage != null,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done // Passer au champ suivant avec "Entrée"
+            )
         )
         Spacer(modifier = Modifier.height(10.dp))
 
