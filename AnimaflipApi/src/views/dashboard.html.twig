@@ -37,22 +37,52 @@
         color: white;
     }
 
-    /* Rechercher */
-    .search-container {
+    /* Rechercher themes */
+    .search-user-container {
         margin-bottom: 15px;
         display: flex;
         justify-content: space-between;
         width: 100%;
     }
 
-    .search-container input {
+    .search-user-container input {
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        width: 90%;
+    }
+
+    /* Rechercher themes */
+    .search-theme-container {
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .search-theme-container input {
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        width: 90%;
+    }
+
+    /* Rechercher */
+    .search-animation-container {
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .search-animation-container input {
         padding: 10px;
         border-radius: 4px;
         border: 1px solid #ddd;
         width: 50%;
     }
 
-    .search-container select {
+    .search-animation-container select {
         padding: 10px;
         border-radius: 4px;
         border: 1px solid #ddd;
@@ -83,26 +113,36 @@
                 <!-- Ajouter le token directement dans l'URL -->
                 <a href="/admin/user/create/{{ token }}" class="btn">Ajouter un utilisateur</a>
             </div>
+
+            <!-- Barre de recherche et filtre -->
+            <div class="search-user-container">
+                <p id="userCount"></p>
+                <input type="text" id="searchUserInput" placeholder="Rechercher un utilisateur..." onkeyup="searchUsers()">
+            </div>
     
             <table>
-                <tr>
-                    <th>ID</th>
-                    <th>Nom d'utilisateur</th>
-                    <th>Rôle</th>
-                    <th>Actions</th>
-                </tr>
+                <head>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nom d'utilisateur</th>
+                        <th>Rôle</th>
+                        <th>Actions</th>
+                    </tr>
+                </head>                
                 {% for user in users %}
-                <tr>
-                    <td>{{ user.id }}</td>
-                    <td>{{ user.username }}</td>
-                    <td>{{ user.role }}</td>
-                    <td>
-                        <a href="/admin/user/{{ user.id }}/edit/{{ token }}" class="btn">Modifier</a>
-                        <form method="POST" action="/admin/user/{{ user.id }}/delete/{{ token }}" style="display:inline;">
-                            <button type="submit" class="btn btn-delete">Supprimer</button>
-                        </form>
-                    </td>
-                </tr>
+                <tbody id="userTableBody">
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.role }}</td>
+                        <td>
+                            <a href="/admin/user/{{ user.id }}/edit/{{ token }}" class="btn">Modifier</a>
+                            <form method="POST" action="/admin/user/{{ user.id }}/delete/{{ token }}" style="display:inline;">
+                                <button type="submit" class="btn btn-delete">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
                 {% endfor %}
             </table>
         </div>
@@ -116,12 +156,18 @@
                     </button>
                 </div>
                 <div id="info-panel-theme" class="info-panel">
-                    <h3>Modification d'un thème : Gestion de ses animations</h3>
+                    <h3>Modification d'un thème : Affectation de ses animations</h3>
                 </div>
             </div>
 
             <div class="spacer">
                 <a href="/admin/theme/create/{{ token }}" class="btn">Ajouter un nouveau thème</a>
+            </div>
+
+            <!-- Barre de recherche et filtre -->
+            <div class="search-theme-container">
+                <p id="themeCount"></p>
+                <input type="text" id="searchThemeInput" placeholder="Rechercher un thème..." onkeyup="searchThemes()">
             </div>
     
             <table>
@@ -132,7 +178,7 @@
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="themeTableBody">
                     {% for theme in themes %}
                     <tr>
                         <td>{{ theme.id }}</td>
@@ -151,7 +197,15 @@
 
         <div class="card">
             <div class="card-title">
-                <h2>Gestion des animations</h2>
+                <div class="title-section">
+                    <h2>Gestion des animations</h2>
+                <button class="info-btn" onclick="toggleInfoPanelAnimation()">
+                        <span class="info-icon">ℹ️</span> Info
+                    </button>
+                </div>
+                <div id="info-panel-animation" class="info-panel">
+                    <h3>Modification de l'animation: Affectation de ses thèmes</h3>
+                </div>
             </div>
 
             <div class="spacer">
@@ -159,9 +213,9 @@
             </div>
 
             <!-- Barre de recherche et filtre -->
-            <div class="search-container">
+            <div class="search-animation-container">
                 <p id="animationCount"></p>
-                <input type="text" id="searchInput" placeholder="Rechercher une animation..." onkeyup="searchAnimations()">
+                <input type="text" id="searchAnimationInput" placeholder="Rechercher une animation..." onkeyup="searchAnimations()">
                 <select id="themeFilter" onchange="filterByTheme()">
                     <option value="">Tous les thèmes</option>
                     {% for theme in themes %}
@@ -221,8 +275,34 @@
 </body>
 </html>
 <script>
+    function searchUsers() {
+        let searchInput = document.getElementById('searchUserInput').value.toLowerCase();
+        let rows = document.querySelectorAll('#userTableBody tr');
+        
+        rows.forEach(row => {
+            let libelle = row.cells[1].textContent.toLowerCase();
+            // Affiche uniquement les thèmes dont le nom correspond à la recherche
+            row.style.display = libelle.includes(searchInput) ? '' : 'none';
+        });
+
+        updateUserCount(); // Mettre à jour le nombre d'animations affichées après la recherche
+    }
+
+    function searchThemes() {
+        let searchInput = document.getElementById('searchThemeInput').value.toLowerCase();
+        let rows = document.querySelectorAll('#themeTableBody tr');
+        
+        rows.forEach(row => {
+            let libelle = row.cells[1].textContent.toLowerCase();
+            // Affiche uniquement les thèmes dont le nom correspond à la recherche
+            row.style.display = libelle.includes(searchInput) ? '' : 'none';
+        });
+
+        updateThemeCount(); // Mettre à jour le nombre d'animations affichées après la recherche
+    }
+    
     function searchAnimations() {
-        let searchInput = document.getElementById('searchInput').value.toLowerCase();
+        let searchInput = document.getElementById('searchAnimationInput').value.toLowerCase();
         let rows = document.querySelectorAll('#animationTableBody tr');
         
         rows.forEach(row => {
@@ -247,14 +327,27 @@
         updateAnimationCount(); // Mettre à jour le nombre d'animations affichées après le filtrage
     }
 
+    function updateUserCount() {
+        let visibleRows = document.querySelectorAll('#userTableBody tr:not([style*="display: none"])').length;
+        document.getElementById('userCount').textContent = 'Total : ' + visibleRows;
+    }
+
+
     function updateAnimationCount() {
         let visibleRows = document.querySelectorAll('#animationTableBody tr:not([style*="display: none"])').length;
         document.getElementById('animationCount').textContent = 'Total : ' + visibleRows;
     }
 
+    function updateThemeCount() {
+        let visibleRows = document.querySelectorAll('#themeTableBody tr:not([style*="display: none"])').length;
+        document.getElementById('themeCount').textContent = 'Total : ' + visibleRows;
+    }
+
     // Initialisation
     window.onload = function () {
-        updateAnimationCount(); // Mise à jour du compteur au chargement de la page
+        updateUserCount(); // Mise à jour du compteur au chargement de la page
+        updateThemeCount();
+        updateAnimationCount();
     };
 
     // Le code commenté qui suit est le test semi-fonctionel de la pagination

@@ -69,6 +69,15 @@ class Animation
             return false;
         }
     }
+    
+    public static function allIdsByTheme($themeId)
+    {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("SELECT animation_id FROM theme_animation WHERE theme_id = :theme_id");
+        $stmt->execute(['theme_id' => $themeId]);
+    
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);  // Retourne un tableau d'IDs d'animations associées
+    }
 
     // Récupérer toutes les animations par thème
     public static function allByTheme($themeId)

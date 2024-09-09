@@ -144,6 +144,10 @@ $app->post('/admin/theme/{id}/edit/{token}', function (Request $request, Respons
     $controller = new \App\Controllers\AdminController($twig);
     return $controller->updateTheme($request, $response, $args);
 });
+$app->post('/admin/theme/{id}/assign-animation/{token}', function (Request $request, Response $response, array $args) use ($twig) {
+    $controller = new \App\Controllers\AdminController($twig);
+    return $controller->assignAnimation($request, $response, $args);
+});
 $app->post('/admin/theme/{id}/delete/{token}', function (Request $request, Response $response, array $args) use ($twig) {
     $controller = new \App\Controllers\AdminController($twig);
     return $controller->deleteTheme($request, $response, $args);

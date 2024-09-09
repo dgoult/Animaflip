@@ -338,13 +338,17 @@ class AdminController
 
         // Récupérer le thème
         $theme = Theme::getById($args['id']);
+        $animations = Animation::all();
 
         // Récupérer les animations déjà du thème
         $assignedAnimations = Animation::allByTheme($args['id']);
+        $assignedAnimationIds = Animation::allIdsByTheme($args['id']);
 
         return $this->view->render($response, 'theme_form.html.twig', [
             'token' => $args['token'], 
             'theme' => $theme,
+            'assignedAnimationIds' => $assignedAnimationIds,
+            'allAnimations' => $animations,
             'assignedAnimations' => $assignedAnimations
         ]);
     }
@@ -372,6 +376,48 @@ class AdminController
             $currentUrl = (string)$request->getUri();
             return $response->withHeader('Location', $currentUrl)->withStatus(500);
         }
+    }
+
+    // Affectation animation
+    public function assignAnimation(Request $request, Response $response, array $args): Response
+    {
+        $token = $args['token'];
+        $themeId = $args['id'];
+
+        // Vérifier si l'utilisateur est admin
+        if (!$this->isAdmin($token)) {
+            return $this->view->render($response, 'login.html.twig', [
+                'error' => 'Accès non autorisé !'
+            ]);
+        }
+
+        // Récupérer les animations sélectionnées depuis le formulaire
+        $data = $request->getParsedBody();
+        $animations = $data['animations'] ?? [];
+
+        $theme = Theme::getById($args['id']);
+        $allAnimations = Animation::all();
+
+        // Détacher toutes les animations du thème existant
+        Theme::unassignAllAnimationsFromTheme($themeId);
+
+        // Assigner les nouvelles animations au thème
+        foreach ($animations as $animationId) {
+            Theme::assignAnimationToTheme($animationId, $themeId);
+        }
+
+        $assignedAnimations = Animation::allByTheme($themeId);
+        $assignedAnimationIds = Animation::allIdsByTheme($themeId);
+
+        return $this->view->render($response, 'theme_form.html.twig', [
+            'token' => $token, 
+            'theme' => $theme,
+            'assignedAnimationIds' => $assignedAnimationIds,
+            'allAnimations' => $allAnimations,
+            'animations' => $animations,
+            'success' => 'Animations affectées avec succès !',
+            'assignedAnimations' => $assignedAnimations
+        ]);
     }
 
     // Suppression du thème
@@ -447,7 +493,7 @@ class AdminController
         if ($animationId) {
             // Assigner les thèmes à l'animation
             foreach ($themes as $themeId) {
-                Theme::assignAnimationToTheme($themeId, $animationId);
+                Theme::assignAnimationToTheme($animationId, $themeId);
             }
 
             return $this->view->render($response, 'animation_form.html.twig', [
@@ -532,7 +578,7 @@ class AdminController
     
             // Assigner les nouveaux thèmes
             foreach ($themes as $themeId) {
-                Theme::assignAnimationToTheme($themeId, $animationId);
+                Theme::assignAnimationToTheme($animationId, $themeId);
             }
     
             session_start(); // Assurez-vous que la session est démarrée
@@ -556,13 +602,26 @@ class AdminController
         $token = $args['token'];
         if (!$this->isAdmin($token)) {
             return $this->view->render($response, 'login.html.twig', [
-                'error' => 'Accès non authorisé !'
+                'error' => 'Accès non autorisé !'
             ]);
         }
 
+        // Récupérer l'animation pour obtenir l'URL de la vidéo
+        $animation = Animation::getById($args['id']);
+        $videoUrl = $animation->video_url; // Assurez-vous que 'video_url' est la colonne correcte.
+
+        // Supprimer l'animation de la base de données
         $result = Animation::deleteAnimation($args['id']);
 
         if ($result) {
+            // Chemin absolu vers le fichier vidéo
+            $filePath = __DIR__ . '/..'. $videoUrl.'.mp4';
+
+            // Vérifier si le fichier existe et le supprimer
+            if (file_exists($filePath)) {
+                unlink($filePath); // Supprime le fichier vidéo du serveur
+            }
+
             return $response->withHeader('Location', "/admin/dashboard/{$args['token']}")->withStatus(302);
         } else {
             return $response->withHeader('Location', "/admin/dashboard/{$args['token']}")->withStatus(500);

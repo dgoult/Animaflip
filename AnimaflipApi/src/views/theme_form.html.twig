@@ -5,8 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formulaire Thème</title>
     <link rel="stylesheet" href="/css/admin.css">
-    <style>
-    </style>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#animations').select2({
+                placeholder: "Sélectionner un ou plusieurs thèmes",
+                allowClear: true
+            });
+        });
+    </script>
 </head>
 <body>
     <div class="container">
@@ -34,10 +46,37 @@
         {% if theme %}
             <div class="card">
                 <div class="card-title">
-                    <h2>Affectation des Animations</h2>
+                    <h2>Affectation des animations</h2>
                 </div>
-                <div class="spacer">
-                    <a href="/admin/animation/create/{{ token }}" class="btn">Ajouter une nouvelle animation</a>
+
+                {% if error %}
+                    <div class="error">{{ error }}</div>
+                {% endif %}
+        
+                {% if success %}
+                    <div class="success">{{ success }}</div>
+                {% endif %}
+                <form class="form-custom" method="POST" action="{{ '/admin/theme/' ~ theme.id ~ '/assign-animation/' ~ token }}" enctype="multipart/form-data">
+                    <div class="spacer">
+                        <label for="animations">Animations associées</label>
+                        <select id="animations" name="animations[]" multiple="multiple" style="width: 100%;" required>
+                        {% for animation in allAnimations %}
+                            <option value="{{ animation.id }}" {% if animation.id in assignedAnimationIds %}selected{% endif %}>
+                                {{ animation.libelle }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                
+                    <button class="spacer" type="submit">Affecter</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <div class="spacer">
+                        <h2>Visuallisation des animations</h2>
+                    </div>
                 </div>
                 <table>
                     <thead>
@@ -62,9 +101,6 @@
                             </td>
                             <td>
                                 <a href="/admin/animation/{{ animation.id }}/edit/{{ token }}" class="btn">Modifier</a>
-                                <form action="/admin/animation/{{ animation.id }}/delete/{{ token }}" method="POST" style="display: inline;">
-                                    <button type="submit" class="btn btn-delete">Supprimer</button>
-                                </form>
                             </td>
                         </tr>
                         {% endfor %}
