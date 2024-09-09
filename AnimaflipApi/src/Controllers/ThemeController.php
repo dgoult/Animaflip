@@ -141,24 +141,3 @@ class ThemeController
         }
     }
 }
-// namespace App\Controllers;
-
-// use Psr\Http\Message\ResponseInterface as Response;
-// use Psr\Http\Message\ServerRequestInterface as Request;
-// use App\Models\Theme;
-// use App\Models\Animation;
-
-// class ThemeController
-// {
-//     public function getThemes(Request $request, Response $response, $args)
-//     {
-//         $themes = Theme::all();
-//         foreach ($themes as &$theme) {
-//             $theme['animations'] = Animation::allByTheme($theme['id']);
-//         }
-
-//         file_put_contents('debugGetThemes.txt', print_r($themes, TRUE));
-//         $response->getBody()->write(json_encode($themes));
-//         return $response->withHeader('Content-Type', 'application/json');
-//     }
-// }

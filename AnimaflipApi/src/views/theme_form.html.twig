@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire Thème</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#animations').select2({
+                placeholder: "Sélectionner un ou plusieurs thèmes",
+                allowClear: true
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="spacer">
+            <a href="/admin/dashboard/{{ token }}" class="btn btn-back">Retour</a>
+        </div>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        {% if successTheme %}
+            <div class="success">{{ successTheme }}</div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-title">
+                <h2>{{ theme.id ? 'Modifier' : 'Créer' }} un thème</h2>
+            </div>
+            <form class="form-custom" method="POST" action="{{ theme.id ? '/admin/theme/' ~ theme.id ~ '/edit/' ~ token : '/admin/theme/create/' ~ token }}">
+                <label for="libelle">Nom du thème</label>
+                <input type="text" id="libelle" name="libelle" value="{{ theme.libelle }}" required>
+
+                <button type="submit">{{ theme.id ? 'Mettre à jour' : 'Créer' }}</button>
+            </form>
+            {% if theme.id %}
+                <form action="/admin/theme/{{ theme.id }}/delete/{{ token }}" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-delete">Supprimer</button>
+                </form>
+            {% endif %}
+
+        </div>
+
+
+        {% if theme.id %}
+            <div class="card">
+                <div class="card-title">
+                    <h2>Affectation des animations</h2>
+                </div>
+
+                {% if error %}
+                    <div class="error">{{ error }}</div>
+                {% endif %}
+        
+                {% if success %}
+                    <div class="success">{{ success }}</div>
+                {% endif %}
+                <form class="form-custom" method="POST" action="{{ '/admin/theme/' ~ theme.id ~ '/assign-animation/' ~ token }}" enctype="multipart/form-data">
+                    <div class="spacer">
+                        <label for="animations">Animations associées</label>
+                        <select id="animations" name="animations[]" multiple="multiple" style="width: 100%;" required>
+                        {% for animation in allAnimations %}
+                            <option value="{{ animation.id }}" {% if animation.id in assignedAnimationIds %}selected{% endif %}>
+                                {{ animation.libelle }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                
+                    <button class="spacer" type="submit">Affecter</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <div class="card-title">
+                    <div class="spacer">
+                        <h2>Visuallisation des animations</h2>
+
+                        <div class="spacer">
+                            <a href="/admin/animation/create/{{ token }}" class="btn">Ajouter une nouvelle animation</a>
+                        </div>
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom de l'animation</th>
+                            <th>Url de la vidéo</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for animation in assignedAnimations %}
+                        <tr>
+                            <td>{{ animation.id }}</td>
+                            <td>{{ animation.libelle }}</td>
+                            <td class="center-box">
+                                <!-- Afficher la vidéo directement dans la cellule -->
+                                <video class="video-cell" controls>
+                                    <source src="{{ animation.video_url }}/{{ token }}" type="video/mp4">
+                                    Votre navigateur ne prend pas en charge la vidéo.
+                                </video>
+                            </td>
+                            <td>
+                                <a href="/admin/animation/{{ animation.id }}/edit/{{ token }}" class="btn">Modifier</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

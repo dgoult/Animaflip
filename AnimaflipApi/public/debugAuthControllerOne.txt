@@ -1,5 +1,1 @@
-Array
-(
-    [username] => admin@admin.com
-    [password] => admin
-)
+eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJhZG1pbkBhZG1pbi5jb20iLCJpYXQiOjE3MjU2MzA0MzgsImV4cCI6MTcyNTYzNDAzOH0.6z0jUQ9Ya1pLOYXZUljmKO2O_BZlofd0H4G_1A330U8

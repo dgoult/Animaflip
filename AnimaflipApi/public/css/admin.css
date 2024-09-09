@@ -1,0 +1,228 @@
+/* Styles généraux */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Ajout de l'espace en bas */
+body::before {
+    content: '';
+    height: 20px; /* Ajoute de l'espace pour éviter que la card touche le bas */
+    display: block;
+}
+
+h1, h2 {
+    color: #333;
+}
+
+.container {
+    margin: 20px;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.spacer {
+    margin-bottom: 10px;
+}
+
+.center {
+    text-align: center;
+}
+
+.center-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Boutons */
+.btn {
+    padding: 10px 15px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+}
+
+td.center-box {
+    vertical-align: top; /* Assurez-vous que le contenu est aligné en haut */
+}
+
+.video-cell {
+    width: 75%;
+    max-width: 500px;
+}
+
+.btn-back {
+    background-color: #3d7e9a;
+}
+
+.btn-delete {
+    background-color: red;
+}
+
+.btn:hover {
+    opacity: 0.8;
+}
+
+.assign-btn {
+    padding: 20px 25px;
+}
+
+/* Tableaux */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+/* Formulaires */
+.form-custom {
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    margin-bottom: 20px;
+}
+
+input, select, button {
+    padding: 10px;
+    margin: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+/* Messages d'erreur */
+.error {
+    color: #ff6b6b;
+    background-color: #ffeeee;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Messages d'erreur */
+.success {
+    color: #4CAF50; 
+    background-color: #d8fad9;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Centrage des formulaires sur la page */
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Formulaire spécifique */
+form label {
+    margin: 5px;
+    font-weight: bold;
+}
+
+/* Gestion des animations et affectations */
+.affectation-actions {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Utiliser flexbox pour aligner le titre et le bouton */
+.title-section {
+    display: flex;
+    align-items: center;
+}
+
+/* Réduire l'espace entre le titre et le bouton */
+.info-btn {
+    background-color: #3d7e9a;
+    color: white;
+    padding: 5px 9px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    margin-top: 10px; /* Ajuster l'espace ici */
+    margin-left: 10px; /* Ajuster l'espace ici */
+}
+
+.info-btn .info-icon {
+    margin-right: 5px;
+}
+
+.info-btn:hover {
+    background-color: #32677e;
+}
+
+/* Panneau d'information caché */
+.info-panel {
+    display: none;
+    background-color: #e6f0fa;
+    padding: 10px;
+    margin-bottom: 30px;
+    border-radius: 5px;
+    color: #333;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* card */
+.card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    max-width: 100%; /* Empêche d'être plus large que la fenêtre */
+    margin: 20px auto;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: fit-content;
+}
+
+/* Titre de la card */
+.card-title {
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f2f2f2; /* Légère ligne en dessous du titre */
+    width: 100%;
+}

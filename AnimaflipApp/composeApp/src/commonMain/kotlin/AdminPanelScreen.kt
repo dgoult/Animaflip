@@ -13,6 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import kotlinx.coroutines.launch
 
 @Composable
@@ -260,7 +262,10 @@ fun EditUserForm(
             value = username,
             onValueChange = { username = it },
             label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Next // Passer au champ suivant avec "Entrée"
+            )
         )
 
         TextField(
@@ -268,7 +273,10 @@ fun EditUserForm(
             onValueChange = { password = it },
             label = { Text("Mot de passe (laisser vide pour ne pas changer)") },
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done // Passer au champ suivant avec "Entrée"
+            )
         )
 
         // Sélecteur de rôle
@@ -331,14 +339,20 @@ fun NewUserForm(
         TextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text("Email") }
+            label = { Text("Email") },
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Next // Passer au champ suivant avec "Entrée"
+            )
         )
         Spacer(modifier = Modifier.height(10.dp))
         TextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Mot de passe") },
-            visualTransformation = PasswordVisualTransformation()
+            visualTransformation = PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Done // Passer au champ suivant avec "Entrée"
+            )
         )
         Spacer(modifier = Modifier.height(10.dp))
 

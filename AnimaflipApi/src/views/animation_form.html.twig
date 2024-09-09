@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire Animation</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#themes').select2({
+                placeholder: "Sélectionner un ou plusieurs thèmes",
+                allowClear: true
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="spacer">
+            <a href="/admin/dashboard/{{ token }}" class="btn btn-back">Retour</a>
+        </div>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        {% if success %}
+            <div class="success">{{ success }}</div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-title">
+                <h2>{{ animation.id ? 'Modifier' : 'Créer' }} une animation</h2>
+            </div>
+            <form class="form-custom" method="POST" action="{{ animation.id ? '/admin/animation/' ~ animation.id ~ '/edit/' ~ token : '/admin/animation/create/' ~ token }}" enctype="multipart/form-data">
+                {% if animation %}
+                    <input type="hidden" name="existing_video_url" value="{{ animation.video_url }}">
+                {% endif %}
+
+                <div class="spacer">
+                    <label for="libelle">Nom de l'animation</label>
+                    <input type="text" id="libelle" name="libelle" value="{{ animation.libelle ?? '' }}" required>
+                </div>
+            
+                {% if animation.video_url %}
+                    <label for="libelle">Vidéo : {{ animation.video_url }}</label>
+                    <video class="video-cell" controls>
+                        <source src="{{ animation.video_url }}/{{ token }}" type="video/mp4">
+                        Votre navigateur ne prend pas en charge la vidéo.
+                    </video>
+                {% endif %}
+            
+                <div class="spacer" style="margin-top: 10px;">
+                    <label for="video_url">Vidéo (MP4 uniquement)</label>
+                    <input type="file" id="video_url" name="video_url" accept="video/mp4" {{ animation.id ? '' : 'required' }}>
+                </div>
+            
+                <div class="spacer">
+                    <label for="themes">Thèmes associés</label>
+                    <select id="themes" name="themes[]" multiple="multiple" style="width: 100%;" required>
+                        {% for theme in themes %}
+                        <option value="{{ theme.id }}" {% if theme.id in assignedThemes %}selected{% endif %}>
+                            {{ theme.libelle }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            
+                <button class="spacer" type="submit">{{ animation.id ? 'Mettre à jour' : 'Créer' }}</button>
+            </form>
+            
+            {% if animation.id %}
+                <form action="/admin/animation/{{ animation.id }}/delete/{{ token }}" method="POST" style="display:inline;">
+                    <button type="submit" class="btn btn-delete">Supprimer</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
